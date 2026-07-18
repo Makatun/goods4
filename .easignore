@@ -1,0 +1,49 @@
+# Copied from .gitignore, plus EAS-specific additions below
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+example
+
+# generated native folders
+/ios
+/android
+
+# EAS-specific: dev-tool files not needed for the build, and whose symlinks
+# EAS's Windows shallow-clone can't recreate (EPERM)
+.claude
+.agents
+skills-lock.json
