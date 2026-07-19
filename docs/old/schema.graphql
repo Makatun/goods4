@@ -1,0 +1,222 @@
+# This "input" configures a global authorization rule to enable public access to
+# all models in this schema. Learn more about authorization rules here: https://docs.amplify.aws/cli/graphql/authorization-rules
+input AMPLIFY { globalAuthRule: AuthRule = { allow: public } } # FOR TESTING ONLY!
+
+
+type User @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  username: String!
+  listsMemebrships: [Contributor] @hasMany
+}
+
+
+type Contributor @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  contributorType: ContributorType!
+  savedFilters: AWSJSON
+
+  reviews: [Review] @hasMany
+  selectedDetails: [SelectedDetail] @hasMany
+  optionPersonalizations: [OptionPersonalization] @hasMany
+
+  list: List @belongsTo
+  user: User @belongsTo
+}
+
+# type Club @model @auth(rules: [{allow: public}]) {
+#   id: ID!
+#   name: String! 
+#   list: List @belongsTo
+#   members: [Contributor] @manyToMany(relationName: "ClubMembers")
+#   items: [Item] @manyToMany(relationName: "ClubItems") #??
+#   private: Boolean
+# }
+
+type List @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  name: String!
+
+  listType: ListType!
+
+  contributors: [Contributor] @hasMany
+  items: [Item] @hasMany
+
+  details: [Detail] @hasMany
+  itemAttributes: [Detail] @hasMany # does it have to be @HasMany? maybe just an array?
+}
+
+type Item @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  name: String!
+
+  reviews: [Review] @hasMany
+
+  list: List @belongsTo
+
+  #denormalization not to fetch values
+  displayedAttribute1: String # Varietal
+  displayedAttribute2: String # country 
+  displayedAttribute3: String # year
+  displayedAttribute4: String # year
+  displayedAttribute5: String # year
+  displayedAttribute6: String # year
+
+  # Key fileds for Item these fields must not vary from user to user and required to enter new product 
+  attributes: [Value] @hasMany    
+}
+
+
+type Review @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  label: ReviewLabel!
+
+  values: [Value] @hasMany
+
+  item: Item @belongsTo
+  contributor: Contributor @belongsTo
+}
+
+
+# Immutable 
+type Detail @model @auth(rules: [{allow: public}]) { 
+  id: ID!
+
+  name: String!
+  type: DetailType!
+
+  defaultPrivate: Boolean
+ 
+  createdByContributorID:ID
+  usageCount: Int!
+                         
+  private: Boolean # used as Default values in SelectedDetail
+  displayLabels: Boolean # used as Default values in SelectedDetail
+
+  numberRange: NumberDetailRange
+  minValue: Float
+  maxValue: Float
+  step: Float
+  minValueLabel: String
+  maxValueLabel: String
+
+
+  possibleOptions: [Option] @hasMany  
+  selectedDetails: [SelectedDetail] @hasMany  
+  values: [Value] @hasMany
+  
+  list: List @belongsTo
+
+  # Item attributes stuff 
+  required: Boolean
+  # position: Int! ?? if position is not saved in the List's itemAttributes
+
+
+}
+
+# Per user Customization of a Detail
+type SelectedDetail @model @auth(rules: [{allow: public}]) {
+  id: ID!
+
+  position: Int!
+  private: Boolean
+  displayLabels: Boolean
+
+  # customOptions: [Option] @hasMany                                            # Should I let users add customOptions?
+
+  valuePersonalizations: [ValuePersonalization] @hasMany
+
+  contributor: Contributor @belongsTo
+  detail: Detail @belongsTo
+}
+
+
+type Option @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  label: String
+  position: Int
+  defaultDisabled: Boolean
+
+  values: [Value] @manyToMany(relationName: "SelectedOptions")
+  personalizations: [OptionPersonalization] @hasMany
+  
+  # selectedDetail: SelectedDetail @belongsTo                                    # Should I let users add customOptions?
+  detail: Detail @belongsTo
+}
+
+
+type Value @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  numberValue: Float
+  textValue: String
+  dateValue: AWSDate
+
+  selectedOptions: [Option] @manyToMany(relationName: "SelectedOptions")
+
+  review: Review @belongsTo
+  item: Item @belongsTo
+
+  detail: Detail @belongsTo
+}
+
+
+type OptionPersonalization @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  sentiment: Int
+  disabled: Boolean
+  position: Int
+
+  option: Option @belongsTo
+  contributor: Contributor @belongsTo
+}
+
+type ValuePersonalization @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  sentiment: Int
+
+  numberValue: Float
+  textValue: String
+  dateValue: AWSDate
+
+  selectedDetail: SelectedDetail @belongsTo
+}
+
+
+
+
+enum ContributorType {
+  OWNER     # Can delete group and change everything
+  ADMIN     # Can change questions and values and approve/remove new members
+  MEMBER    # Can create review 
+  APPLICANT # Waiting for admin to approve 
+}
+
+
+enum ListType {
+  PRODUCTS
+  PLACES
+  ITEMS
+}
+
+
+enum ReviewLabel {
+  FAVORITE
+  GOOD
+  OK
+  BAD
+  WISH_TO_TRY
+}
+
+enum DetailType {
+  singleSelect
+  number
+  text
+  tags
+  date
+}
+
+enum NumberDetailRange {
+  FIVE
+  HUNDRED
+  CUSTOM
+}
+          
