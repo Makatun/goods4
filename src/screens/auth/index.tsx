@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Alert, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { GoogleSignin, GoogleSigninButton, isSuccessResponse, statusCodes } from '@react-native-google-signin/google-signin';
 
+import { Text, TextInput, TouchableOpacity, View } from '@/tw';
 import { supabase } from '@/utils/supabase';
-import { authStyles } from '@/styles/auth';
 
 // @react-native-google-signin/google-signin has no web implementation, and
 // Expo Router server-renders this module for web too — only configure it
@@ -20,7 +20,6 @@ export function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const styles = authStyles;
 
   async function signInWithEmail() {
     setLoading(true);
@@ -120,49 +119,47 @@ export function Auth() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.verticallySpaced, styles.mt20]}>
-        <Text style={styles.label}>Email</Text>
+    <View className="flex-1 mt-10 p-3 bg-[#333333]">
+      <View className="py-1 self-stretch mt-5">
+        <Text className="text-[16px] font-semibold text-[#86939e] mb-1.5">Email</Text>
         <TextInput
           onChangeText={(text) => setEmail(text)}
           value={email}
           placeholder="email@address.com"
           autoCapitalize="none"
-          style={styles.input}
+          className="border border-[#86939e] rounded p-3 text-[16px] text-white"
         />
       </View>
-      <View style={styles.verticallySpaced}>
-        <Text style={styles.label}>Password</Text>
+      <View className="py-1 self-stretch">
+        <Text className="text-[16px] font-semibold text-[#86939e] mb-1.5">Password</Text>
         <TextInput
           onChangeText={(text) => setPassword(text)}
           value={password}
           secureTextEntry
           placeholder="Password"
           autoCapitalize="none"
-          style={styles.input}
+          className="border border-[#86939e] rounded p-3 text-[16px] text-white"
         />
       </View>
-      <View style={[styles.verticallySpaced, styles.mt20]}>
+      <View className="py-1 self-stretch mt-5">
         <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
+          className={`bg-[#2089dc] rounded p-3 items-center ${loading ? 'opacity-50' : ''}`}
           onPress={signInWithEmail}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>Sign in</Text>
+          disabled={loading}>
+          <Text className="text-white text-[16px] font-semibold">Sign in</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.verticallySpaced}>
+      <View className="py-1 self-stretch">
         <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
+          className={`bg-[#2089dc] rounded p-3 items-center ${loading ? 'opacity-50' : ''}`}
           onPress={signUpWithEmail}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>Sign up</Text>
+          disabled={loading}>
+          <Text className="text-white text-[16px] font-semibold">Sign up</Text>
         </TouchableOpacity>
       </View>
 
       {Platform.OS === 'ios' && (
-        <View style={[styles.verticallySpaced, styles.mt20]}>
+        <View className="py-1 self-stretch mt-5">
           <AppleAuthentication.AppleAuthenticationButton
             buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
             buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
@@ -174,7 +171,7 @@ export function Auth() {
       )}
 
       {Platform.OS !== 'web' && (
-        <View style={styles.verticallySpaced}>
+        <View className="py-1 self-stretch">
           <GoogleSigninButton
             size={GoogleSigninButton.Size.Wide}
             color={GoogleSigninButton.Color.Dark}

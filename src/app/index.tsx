@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
 
+import { View } from '@/tw';
 import { Account } from '@/screens/account';
 import { Auth } from '@/screens/auth';
 import { supabase } from '@/utils/supabase';
@@ -34,6 +34,6 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <View style={{ flex: 1 }}>{userId ? <Account key={userId} userId={userId} email={email} /> : <Auth />}</View>
+    <View className="flex-1">{userId ? <Account key={userId} userId={userId} email={email} /> : <Auth />}</View>
   );
 }

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert } from 'react-native';
 
+import { Text, TextInput, TouchableOpacity, View } from '@/tw';
 import { Avatar } from '@/components/avatar';
-import { authStyles } from '@/styles/auth';
 import { supabase } from '@/utils/supabase';
 
 export function Account({ userId, email }: { userId: string; email?: string }) {
@@ -10,7 +10,6 @@ export function Account({ userId, email }: { userId: string; email?: string }) {
   const [username, setUsername] = useState('');
   const [website, setWebsite] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
-  const styles = authStyles;
 
   useEffect(() => {
     if (userId) getProfile();
@@ -76,7 +75,7 @@ export function Account({ userId, email }: { userId: string; email?: string }) {
   }
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 mt-10 p-3 bg-[#333333]">
       <View>
         <Avatar
           size={200}
@@ -87,45 +86,46 @@ export function Account({ userId, email }: { userId: string; email?: string }) {
           }}
         />
       </View>
-      <View style={[styles.verticallySpaced, styles.mt20]}>
-        <Text style={styles.label}>Email</Text>
+      <View className="py-1 self-stretch mt-5">
+        <Text className="text-[16px] font-semibold text-[#86939e] mb-1.5">Email</Text>
         <TextInput
           value={email ?? ''}
           editable={false}
           selectTextOnFocus={false}
-          style={[styles.input, styles.inputDisabled]}
+          className="border rounded p-3 text-[16px] bg-[#f2f2f2] border-[#d1d1d1] text-[#9e9e9e]"
         />
       </View>
-      <View style={styles.verticallySpaced}>
-        <Text style={styles.label}>Username</Text>
+      <View className="py-1 self-stretch">
+        <Text className="text-[16px] font-semibold text-[#86939e] mb-1.5">Username</Text>
         <TextInput
           value={username || ''}
           onChangeText={(text) => setUsername(text)}
-          style={styles.input}
+          className="border border-[#86939e] rounded p-3 text-[16px] text-white"
         />
       </View>
-      <View style={styles.verticallySpaced}>
-        <Text style={styles.label}>Website</Text>
+      <View className="py-1 self-stretch">
+        <Text className="text-[16px] font-semibold text-[#86939e] mb-1.5">Website</Text>
         <TextInput
           value={website || ''}
           onChangeText={(text) => setWebsite(text)}
-          style={styles.input}
+          className="border border-[#86939e] rounded p-3 text-[16px] text-white"
         />
       </View>
 
-      <View style={[styles.verticallySpaced, styles.mt20]}>
+      <View className="py-1 self-stretch mt-5">
         <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
+          className={`bg-[#2089dc] rounded p-3 items-center ${loading ? 'opacity-50' : ''}`}
           onPress={() => updateProfile({ username, website, avatar_url: avatarUrl })}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>{loading ? 'Loading ...' : 'Update'}</Text>
+          disabled={loading}>
+          <Text className="text-white text-[16px] font-semibold">
+            {loading ? 'Loading ...' : 'Update'}
+          </Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.verticallySpaced}>
-        <TouchableOpacity style={styles.button} onPress={() => supabase.auth.signOut()}>
-          <Text style={styles.buttonText}>Sign Out</Text>
+      <View className="py-1 self-stretch">
+        <TouchableOpacity className="bg-[#2089dc] rounded p-3 items-center" onPress={() => supabase.auth.signOut()}>
+          <Text className="text-white text-[16px] font-semibold">Sign Out</Text>
         </TouchableOpacity>
       </View>
     </View>

@@ -3,11 +3,64 @@
 @import "tailwindcss/utilities.css";
 
 :root {
-  --font-display:
+  color-scheme: light dark;
+
+  --brand-text: light-dark(#000000, #ffffff);
+  --brand-background: light-dark(#ffffff, #000000);
+  --brand-background-element: light-dark(#F0F0F3, #212225);
+  --brand-background-selected: light-dark(#E0E1E6, #2E3135);
+  --brand-text-secondary: light-dark(#60646C, #B0B4BA);
+  --brand-link-primary: #3c87f7;
+
+  --font-family-display:
     Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
     Segoe UI Symbol, Noto Color Emoji;
-  --font-mono:
+  --font-family-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-  --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
-  --font-serif: Georgia, 'Times New Roman', serif;
+  --font-family-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
+  --font-family-serif: Georgia, 'Times New Roman', serif;
+}
+
+@media android {
+  :root {
+    --font-family-mono: monospace;
+    --font-family-rounded: normal;
+    --font-family-serif: serif;
+    --font-family-display: normal;
+  }
+}
+
+@media ios {
+  :root {
+    --font-family-mono: ui-monospace;
+    --font-family-serif: ui-serif;
+    --font-family-display: system-ui;
+    --font-family-rounded: ui-rounded;
+  }
+}
+
+@layer theme {
+  @theme {
+    --color-text: var(--brand-text);
+    --color-background: var(--brand-background);
+    --color-background-element: var(--brand-background-element);
+    --color-background-selected: var(--brand-background-selected);
+    --color-text-secondary: var(--brand-text-secondary);
+    --color-link-primary: var(--brand-link-primary);
+
+    --font-sans: var(--font-family-display);
+    --font-serif: var(--font-family-serif);
+    --font-mono: var(--font-family-mono);
+    --font-rounded: var(--font-family-rounded);
+  }
+}
+
+@utility font-code-weight {
+  font-weight: 500;
+}
+
+@media android {
+  .font-code-weight {
+    font-weight: 700;
+  }
 }

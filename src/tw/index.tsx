@@ -12,6 +12,7 @@ import {
   Pressable as RNPressable,
   ScrollView as RNScrollView,
   TouchableHighlight as RNTouchableHighlight,
+  TouchableOpacity as RNTouchableOpacity,
   TextInput as RNTextInput,
   StyleSheet,
 } from 'react-native';
@@ -42,9 +43,11 @@ export const View = (props: ViewProps) => {
 };
 View.displayName = 'CSS(View)';
 
-export const Text = (
-  props: React.ComponentProps<typeof RNText> & { className?: string }
-) => {
+export type TextProps = React.ComponentProps<typeof RNText> & {
+  className?: string;
+};
+
+export const Text = (props: TextProps) => {
   return useCssElement(RNText, props, { className: 'style' });
 };
 Text.displayName = 'CSS(Text)';
@@ -63,16 +66,20 @@ export const ScrollView = (
 };
 ScrollView.displayName = 'CSS(ScrollView)';
 
-export const Pressable = (
-  props: React.ComponentProps<typeof RNPressable> & { className?: string }
-) => {
+export type PressableProps = React.ComponentProps<typeof RNPressable> & {
+  className?: string;
+};
+
+export const Pressable = (props: PressableProps) => {
   return useCssElement(RNPressable, props, { className: 'style' });
 };
 Pressable.displayName = 'CSS(Pressable)';
 
-export const TextInput = (
-  props: React.ComponentProps<typeof RNTextInput> & { className?: string }
-) => {
+export type TextInputProps = React.ComponentProps<typeof RNTextInput> & {
+  className?: string;
+};
+
+export const TextInput = (props: TextInputProps) => {
   return useCssElement(RNTextInput, props, { className: 'style' });
 };
 TextInput.displayName = 'CSS(TextInput)';
@@ -112,3 +119,10 @@ export const TouchableHighlight = (
   return useCssElement(XXTouchableHighlight, props, { className: 'style' });
 };
 TouchableHighlight.displayName = 'CSS(TouchableHighlight)';
+
+export const TouchableOpacity = (
+  props: React.ComponentProps<typeof RNTouchableOpacity> & { className?: string }
+) => {
+  return useCssElement(RNTouchableOpacity, props, { className: 'style' });
+};
+TouchableOpacity.displayName = 'CSS(TouchableOpacity)';

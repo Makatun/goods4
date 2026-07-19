@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Alert, Image, Text, TouchableOpacity, View } from 'react-native';
+import { Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
+import { Text, TouchableOpacity, View } from '@/tw';
+import { Image } from '@/tw/image';
 import { supabase } from '@/utils/supabase';
-import { authStyles } from '@/styles/auth';
 
 interface Props {
   size: number;
@@ -15,7 +16,6 @@ export function Avatar({ url, size = 150, onUpload }: Props) {
   const [uploading, setUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const avatarSize = { height: size, width: size };
-  const styles = authStyles;
 
   useEffect(() => {
     if (url) downloadImage(url);
@@ -85,23 +85,28 @@ export function Avatar({ url, size = 150, onUpload }: Props) {
   }
 
   return (
-    <View style={styles.avatarContainer}>
+    <View className="items-center justify-center mt-5">
       {avatarUrl ? (
         <Image
           source={{ uri: avatarUrl }}
           accessibilityLabel="Avatar"
-          style={[avatarSize, styles.avatar, styles.image]}
+          className="rounded-[5px] overflow-hidden max-w-full mb-5 object-cover"
+          style={avatarSize}
         />
       ) : (
-        <View style={[avatarSize, styles.avatar, styles.noImage]} />
+        <View
+          className="rounded-[5px] overflow-hidden max-w-full mb-5 bg-[#333] border border-solid border-[rgb(200,200,200)]"
+          style={avatarSize}
+        />
       )}
       <View>
         <TouchableOpacity
-          style={[styles.button, uploading && styles.buttonDisabled]}
+          className={`bg-[#2089dc] rounded p-3 items-center ${uploading ? 'opacity-50' : ''}`}
           onPress={uploadAvatar}
-          disabled={uploading}
-        >
-          <Text style={styles.buttonText}>{uploading ? 'Uploading ...' : 'Upload'}</Text>
+          disabled={uploading}>
+          <Text className="text-white text-[16px] font-semibold">
+            {uploading ? 'Uploading ...' : 'Upload'}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
