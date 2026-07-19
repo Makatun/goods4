@@ -23,17 +23,13 @@ export function Avatar({ url, size = 150, onUpload }: Props) {
 
   async function downloadImage(path: string) {
     try {
-      const { data, error } = await supabase.storage.from('avatars').download(path);
+      const { data, error } = await supabase.storage.from('avatars').createSignedUrl(path, 60);
 
       if (error) {
         throw error;
       }
 
-      const fr = new FileReader();
-      fr.readAsDataURL(data);
-      fr.onload = () => {
-        setAvatarUrl(fr.result as string);
-      };
+      setAvatarUrl(data.signedUrl);
     } catch (error) {
       console.log('Error downloading image: ', (error as Error).message);
     }
