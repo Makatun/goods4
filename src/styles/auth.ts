@@ -2,8 +2,10 @@ import { StyleSheet } from 'react-native';
 
 export const authStyles = StyleSheet.create({
   container: {
+    flex: 1,
     marginTop: 40,
     padding: 12,
+    backgroundColor: '#333333',
   },
   verticallySpaced: {
     paddingTop: 4,
@@ -25,6 +27,7 @@ export const authStyles = StyleSheet.create({
     borderRadius: 4,
     padding: 12,
     fontSize: 16,
+    color: '#ffffff',
   },
   inputDisabled: {
     backgroundColor: '#f2f2f2',

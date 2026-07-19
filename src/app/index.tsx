@@ -33,5 +33,7 @@ export default function HomeScreen() {
     return () => subscription.subscription.unsubscribe();
   }, []);
 
-  return <View>{userId ? <Account key={userId} userId={userId} email={email} /> : <Auth />}</View>;
+  return (
+    <View style={{ flex: 1 }}>{userId ? <Account key={userId} userId={userId} email={email} /> : <Auth />}</View>
+  );
 }
