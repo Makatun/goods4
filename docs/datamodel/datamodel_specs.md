@@ -17,7 +17,6 @@ List have SelectedDetail which are details that are used and or customized by th
 COntributer can drag details(Questions) to the seclectedDetails list the new  seclectedDetails will be created with link to detail(Question)
 COntributer can cutomize Selected details (position, privacy, label display)
 
-SelectedDetail will appear on the list's screen as SelectedDetail list, items screen and as a set of filters on Items screen
 
 COntributer can add Item to the list 
 Contributer can create a review by selecting predefined multiple choice (  FAVORITE, GOOD, OK, BAD, WISH_TO_TRY ) on the Item
@@ -45,21 +44,13 @@ Item holds aggregate values of all reviews for this item
 | `SelectedDetail` | Per-contributor customization of a `Detail` (position, privacy, label display). |
 | `Option` | A choice for `singleSelect`/`tags` details. |
 | `Value` | An answer: number/text/date and/or selected options; belongs to a `Review`
-| `ConsensusValue` | An answer: number/text/date and/or selected options; belongs to a `Detail` and holds most popular value from all contributors
+| `ConsensusValue` | An answer: number/text/date and/or selected options; belongs to a `Detail` and an `Item` and holds most popular/average value from all contributors
 , and to a `Detail`. |
 | `OptionPersonalization` | Per-contributor tweak of an option (sentiment, disabled, position). |
 | `ValuePersonalization` | Per-contributor opinion(sentiment) of Contributor's Value or ConsensusValue. |
 
 
-
-SelectedDetail is still half global and half per-contributor.
-You define it as per-contributor customization, but you also say it appears on the list screen as a SelectedDetail list and as filters on the Items screen in datamodel_specs.md. If it is per-contributor, then every viewer has a different SelectedDetail set. If the list screen needs one shared SelectedDetail set, that should be a separate list-level model.
-
-ConsensusValue does not have the right parent yet.
-Right now it says it belongs to a Detail, but aggregate consensus usually depends on both Item and Detail, not just Detail. Otherwise “most popular wine year” would be global across the whole list rather than for one specific item.
-
-ConsensusValue is only defined for “most popular value,” which works poorly for some detail types.
-For singleSelect and tags, “most popular” is straightforward. For number, date, text, and location, it is not. You need to say whether consensus means mode, average, median, latest, normalized bucket, or something else. Without that, ConsensusValue is not well-defined.
+]
 
 ValuePersonalization still has an unclear target.
 You now say it is an opinion of Contributor’s Value or ConsensusValue in datamodel_specs.md. That means one model points at two different kinds of things. That can work conceptually, but you need to choose how it is represented:
