@@ -1,9 +1,9 @@
 import { version } from 'expo/package.json';
-import { useColorScheme } from 'react-native';
 
 import { Image } from '@/tw/image';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export function WebBadge() {
   const scheme = useColorScheme();

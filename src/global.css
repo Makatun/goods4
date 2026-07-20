@@ -5,11 +5,11 @@
 :root {
   color-scheme: light dark;
 
-  --brand-text: light-dark(#000000, #ffffff);
-  --brand-background: light-dark(#ffffff, #000000);
-  --brand-background-element: light-dark(#F0F0F3, #212225);
-  --brand-background-selected: light-dark(#E0E1E6, #2E3135);
-  --brand-text-secondary: light-dark(#60646C, #B0B4BA);
+  --brand-text: #000000;
+  --brand-background: #ffffff;
+  --brand-background-element: #F0F0F3;
+  --brand-background-selected: #E0E1E6;
+  --brand-text-secondary: #60646C;
   --brand-link-primary: #3c87f7;
 
   --font-family-display:
@@ -19,6 +19,23 @@
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
   --font-family-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
   --font-family-serif: Georgia, 'Times New Roman', serif;
+}
+
+/**
+ * `light-dark()` isn't wired to react-native-css's reactive colorScheme, so
+ * it never responds to Appearance.setColorScheme()'s manual override — only
+ * to the initial OS value. Redefining the variables under the same
+ * `prefers-color-scheme` media query the `dark:` variant itself compiles to
+ * keeps every consumer (both manual toggle and system changes) in sync.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --brand-text: #ffffff;
+    --brand-background: #000000;
+    --brand-background-element: #212225;
+    --brand-background-selected: #2E3135;
+    --brand-text-secondary: #B0B4BA;
+  }
 }
 
 @media android {

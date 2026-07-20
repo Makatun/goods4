@@ -7,7 +7,6 @@ import {
   TabListProps,
 } from 'expo-router/ui';
 import { SymbolView } from 'expo-symbols';
-import { useColorScheme } from 'react-native';
 
 import { Pressable, View } from '@/tw';
 import { ExternalLink } from './external-link';
@@ -15,6 +14,7 @@ import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
 import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function AppTabs() {
   return (

@@ -119,26 +119,26 @@ export function Auth() {
   }
 
   return (
-    <View className="flex-1 mt-10 p-3 bg-[#333333]">
+    <View className="flex-1 mt-10 p-3 bg-background">
       <View className="py-1 self-stretch mt-5">
-        <Text className="text-[16px] font-semibold text-[#86939e] mb-1.5">Email</Text>
+        <Text className="text-[16px] font-semibold text-text-secondary mb-1.5">Email</Text>
         <TextInput
           onChangeText={(text) => setEmail(text)}
           value={email}
           placeholder="email@address.com"
           autoCapitalize="none"
-          className="border border-[#86939e] rounded p-3 text-[16px] text-white"
+          className="border border-background-selected rounded p-3 text-[16px] text-text"
         />
       </View>
       <View className="py-1 self-stretch">
-        <Text className="text-[16px] font-semibold text-[#86939e] mb-1.5">Password</Text>
+        <Text className="text-[16px] font-semibold text-text-secondary mb-1.5">Password</Text>
         <TextInput
           onChangeText={(text) => setPassword(text)}
           value={password}
           secureTextEntry
           placeholder="Password"
           autoCapitalize="none"
-          className="border border-[#86939e] rounded p-3 text-[16px] text-white"
+          className="border border-background-selected rounded p-3 text-[16px] text-text"
         />
       </View>
       <View className="py-1 self-stretch mt-5">

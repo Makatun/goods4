@@ -1,18 +1,26 @@
 import { useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, Switch } from 'react-native';
 
 import { Text, TextInput, TouchableOpacity, View } from '@/tw';
 import { Avatar } from '@/components/avatar';
+import {
+  seedColorSchemeFromProfile,
+  setColorSchemeOverride,
+  setColorSchemeSyncUserId,
+} from '@/hooks/color-scheme-store';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { supabase } from '@/utils/supabase';
 
 export function Account({ userId, email }: { userId: string; email?: string }) {
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState('');
-  const [website, setWebsite] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const scheme = useColorScheme();
 
   useEffect(() => {
     if (userId) getProfile();
+    setColorSchemeSyncUserId(userId);
+    return () => setColorSchemeSyncUserId(null);
   }, [userId]);
 
   async function getProfile() {
@@ -21,7 +29,7 @@ export function Account({ userId, email }: { userId: string; email?: string }) {
 
       const { data, error, status } = await supabase
         .from('profiles')
-        .select(`username, website, avatar_url`)
+        .select(`username, avatar_url, dark_mode`)
         .eq('id', userId)
         .single();
       if (error && status !== 406) {
@@ -30,8 +38,8 @@ export function Account({ userId, email }: { userId: string; email?: string }) {
 
       if (data) {
         setUsername(data.username);
-        setWebsite(data.website);
         setAvatarUrl(data.avatar_url);
+        seedColorSchemeFromProfile(data.dark_mode);
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -42,22 +50,13 @@ export function Account({ userId, email }: { userId: string; email?: string }) {
     }
   }
 
-  async function updateProfile({
-    username,
-    website,
-    avatar_url,
-  }: {
-    username: string;
-    website: string;
-    avatar_url: string;
-  }) {
+  async function updateProfile({ username, avatar_url }: { username: string; avatar_url: string }) {
     try {
       setLoading(true);
 
       const updates = {
         id: userId,
         username,
-        website,
         avatar_url,
         updated_at: new Date(),
       };
@@ -74,48 +73,49 @@ export function Account({ userId, email }: { userId: string; email?: string }) {
     }
   }
 
+  function updateDarkMode(darkMode: boolean) {
+    setColorSchemeOverride(darkMode ? 'dark' : 'light');
+  }
+
   return (
-    <View className="flex-1 mt-10 p-3 bg-[#333333]">
+    <View className="flex-1 mt-10 p-3 bg-background">
       <View>
         <Avatar
           size={200}
           url={avatarUrl}
           onUpload={(url: string) => {
             setAvatarUrl(url);
-            updateProfile({ username, website, avatar_url: url });
+            updateProfile({ username, avatar_url: url });
           }}
         />
       </View>
       <View className="py-1 self-stretch mt-5">
-        <Text className="text-[16px] font-semibold text-[#86939e] mb-1.5">Email</Text>
+        <Text className="text-[16px] font-semibold text-text-secondary mb-1.5">Email</Text>
         <TextInput
           value={email ?? ''}
           editable={false}
           selectTextOnFocus={false}
-          className="border rounded p-3 text-[16px] bg-[#f2f2f2] border-[#d1d1d1] text-[#9e9e9e]"
+          className="border rounded p-3 text-[16px] bg-background-element border-background-selected text-text-secondary"
         />
       </View>
       <View className="py-1 self-stretch">
-        <Text className="text-[16px] font-semibold text-[#86939e] mb-1.5">Username</Text>
+        <Text className="text-[16px] font-semibold text-text-secondary mb-1.5">Username</Text>
         <TextInput
           value={username || ''}
           onChangeText={(text) => setUsername(text)}
-          className="border border-[#86939e] rounded p-3 text-[16px] text-white"
+          className="border border-background-selected rounded p-3 text-[16px] text-text"
         />
       </View>
-      <View className="py-1 self-stretch">
-        <Text className="text-[16px] font-semibold text-[#86939e] mb-1.5">Website</Text>
-        <TextInput
-          value={website || ''}
-          onChangeText={(text) => setWebsite(text)}
-          className="border border-[#86939e] rounded p-3 text-[16px] text-white"
-        />
+
+      <View className="flex-row items-center justify-between py-1 self-stretch mt-5">
+        <Text className="text-[16px] font-semibold text-text-secondary">Dark mode</Text>
+        <Switch value={scheme === 'dark'} onValueChange={updateDarkMode} />
       </View>
 
       <View className="py-1 self-stretch mt-5">
         <TouchableOpacity
           className={`bg-[#2089dc] rounded p-3 items-center ${loading ? 'opacity-50' : ''}`}
-          onPress={() => updateProfile({ username, website, avatar_url: avatarUrl })}
+          onPress={() => updateProfile({ username, avatar_url: avatarUrl })}
           disabled={loading}>
           <Text className="text-white text-[16px] font-semibold">
             {loading ? 'Loading ...' : 'Update'}
