@@ -35,7 +35,11 @@ Sentiment is an int value from 1 to 5 that describe contributors opinion of some
 Detail can be of type singleSelect,  number,  text,  tags,  date, location
 Detail can be marked private and this will be defailt value for SelectedDetail private field. 
 Contributors cannot modify or delete details that were not created by them
-After Detail has a corresponding SelectedDetail it becomes immutable with some exeptions: 1) If all SelectedDetails are deleted for a Detail becomes mutable again. 2) If there is only one corresponding SelectedDetail and this SelectedDetails is created by Detail creator then this creator can modify or delete this detail but that will trigger corresponding SelectedDetail deletion. Warning shold be displayed for the user in this case.
+After Detail has a corresponding SelectedDetail it becomes immutable.
+If all SelectedDetails are deleted for a Detail becomes mutable again.
+If there is only one corresponding SelectedDetail and this SelectedDetails is created by Detail creator this creator has edit/delete button enabled but on click system will ask to delete SelectedDetail and on confirmation SelectedDetail is deleted and Detail becomes mutable.
+
+
 Only Detail createor can modify/delete Detail unless it became immutable. 
 Only SelectedDetail creator can delete SelectedDetail
 If only one coresponding SelectedDetail exists and it is from the same contibutor he can delete SelectedDetail and modify Detail.
