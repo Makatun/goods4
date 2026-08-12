@@ -51,9 +51,9 @@ Detail can be deleted or modified if it has no corresponding SelectedDetail
 If detail has only one SelectedDetail and both of them are created by the same user this user can delete the detail with the warning of data loss and cascading deletion of related SelectedDetail it's child objects
 Detail has a counter of all corresponding SelectedDetails 
 Admins can mark Details to be default for a List
-Default details will be used to create initial set of SelectedDetails for new Contributors
+Default details will be used to create initial set of SelectedDetails for new Contributors. THey will be authored by current Contributor.  After creation current contributor can delete them and/or select different details. 
 Details with no corresponding SelectedDetails from any contributors will be deleted automatically after upForDeletionDate is reached
-Detail upForDeletionDate is set to one week after last SelectedDetail for that Detail is deleted
+Detail upForDeletionDate is set to one week after last SelectedDetail for that Detail is deleted. If someone will create SelectedDetail based on that detail timer stops and reset to 0.
 If Contributor that created detail leaves the List details stay. Detail is owned by the list not the contributor how created it.
 
 
@@ -67,7 +67,7 @@ Contributor cannot see change or delete other congtrobutors Values.
 Contributor cannot see peronalization of other contributors
 Contributor cannot see reviews of other contributors
 Contributor can see aggregate values counts of other contriobutors 
-Detail's aggregates are hidden below 3 contributors for privte Details
+Detail's aggregates are hidden for Details with 3 or less SelectedDetails for Detail marked private. 
 
 Item holds aggregate values ie cached projection derived from reviews for this item. 
 
@@ -89,49 +89,23 @@ ConsensusValue calculation by detail type:
 - date: most number same date
 - text and location: only if it is the same more than 50% of answers?
 
-All objects have created by/who fields and modified by/who
+All objects have created by/who fields and modified by/who and set to contributor
 
 | Model | Purpose |
 |---|---|
-| `User` | Account; only `username`. Membership in lists goes through `Contributor`. |
-| `Contributor` | Join entity between `User` and `List`, with a role (`OWNER`/`ADMIN`/`MEMBER`) and saved screens configs. |
-| `List` | A collection with name, contributors, items, and details. |
-| `Item` | A thing being reviewed. |
-| `Review` | A contributor's review of an item: a `ReviewLabel` plus a set of `Value`s. |
-| `Detail` | A configurable question/attribute definition (type, number range, options). Belongs to a list. |
-| `SelectedDetail` | Per-contributor customization of a `Detail` (position, privacy, label display). private per contributor |
-| `Option` | A choice for `singleSelect`/`tags` details. |
-| `Value` | An answer: number/text/date and/or selected options; belongs to a `Review`
-| `ConsensusValue` | An answer: number/text/date and/or selected options; belongs to a `Detail` and an `Item` ( Item + Detail) and holds most popular/average value from all contributors
-, and to a `Detail`. |
-| `OptionPersonalization` | Per-contributor tweak of an option (sentiment, disabled, position). they only affect that contributor’s personal experience and are invisible to others |
-| `ValuePersonalization` | Per-contributor opinion(sentiment) of Contributor's Value. they only affect that contributor’s personal experience and are invisible to others |
-| `ConsensusValuePersonalization` | Per-contributor opinion(sentiment) of ConsensusValue Value. |
+| `User` | Account; only `username`. Membership in lists goes through `Contributor`. Deleted if user deletes his account.|
+| `Contributor` | Join entity between `User` and `List`, with a role (`OWNER`/`ADMIN`/`MEMBER`) and saved screens configs. Deleted if user or list is deleted. Deleted if user exit the list and confirms deletion of private data within this list. All created/updated by fields referencing this user are replaced with "deleted user" palceholder .|
+| `List` | A collection with name, contributors, items, and details. Can be Deleted By creator if no other contributors apart from creators exist. |
+| `Item` | A thing being reviewed. Can be deleted by creator if creator is the only one who has associated review. Admin can disable it which will remove Item from the list search. |
+| `Review` | A contributor's review of an item: a `ReviewLabel` plus a set of `Value`s. Can be deleted by creator. |
+| `Detail` | A configurable question/attribute definition (type, number range, options). Belongs to a list. Can be deleted by creator if it has one or no associated SelectedDetail and selected detail is from the creator |
+| `SelectedDetail` | Per-contributor customization of a `Detail` (position, privacy, label display). private per contributor. Can be deleted by controbutor. |
+| `Option` | A choice for `singleSelect`/`tags` details. Deleted if detail is deleted. Can be deleted by creator if not selected by anyone else. |
+| `Value` | An answer: number/text/date and/or selected options; belongs to a `Review`. Deleted if review is deleted Can be deleted by the creator. Deleted if SelectedDetail is deleted.
+| `ConsensusValue` | An answer: number/text/date and/or selected options; belongs to a `Detail` and an `Item` ( Item + Detail) and holds most popular/average value from all contributors. Deleted if corresponding item or detail is deleted. |
+| `OptionPersonalization` | Per-contributor tweak of an option (sentiment, disabled, position). they only affect that contributor’s personal experience and are invisible to others. Deleted if Option or Contributor is deleted. |
+| `ValuePersonalization` | Per-contributor opinion(sentiment) of Contributor's Value. they only affect that contributor’s personal experience and are invisible to others..   Deleted if Value or Contributor is deleted. |
 
 
 
-\
-Cascade delete scope is not complete
-You define one cascade path (SelectedDetail deletion), but not all paths:
-what happens to ConsensusValue and item aggregates when values are deleted?
 
-ConsensusValue definition is still undecided for several types
-You still have question marks for number/date/text/location logic. That means aggregate behavior is not spec-complete yet.
-
-Privacy threshold wording is ambiguous
-“Detail’s aggregates are hidden below 3 contributors for private details” needs exact scope:
-is private at SelectedDetail level (per user) or Detail level (list-wide)?
-who can still see aggregates (admins, owner, creator)?
-
-Default details behavior needs update policy
-You defined creation for new contributors, but not what happens when default details change later:
-do existing contributors get backfilled, left untouched, or prompted?
-
-Auto-deletion timer edge cases
-You define upForDeletionDate after last SelectedDetail deletion, but not whether timer is canceled if a new SelectedDetail is created before expiry.
-
-“All objects have created by / modified by” is underspecified
-You should define whether these are user ids, contributor ids, or both. In this model, that choice matters for list-scoped permissions.
-
-Terminology and spelling still vary
-There are still multiple typos and inconsistent terms. This is not just cosmetic; inconsistent naming causes schema and API drift later.
