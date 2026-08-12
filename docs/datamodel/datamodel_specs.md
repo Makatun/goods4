@@ -11,7 +11,7 @@ User cannot see any info in the list apart from statistics (Number of contributo
 User can apply to enter the list and can be automatically accepted or with approval or with age confirmation. Thiw will be configured on the List page by Admins of that list. Admins can enable or diable hardcoded qualification filters: boolean on Contributor. "Are you over 21?", boolean on Contributor "Do you Accept Terms and conditions." Editable String on List "terms" which wil hold terms that editable on the list Edit Screen.  
 
 User can become COntributor and after automatic approval or manual apporoval by list admin. 
-Contributor can have diferent states.  pending , approved, rejected, banned. Only approved state allows access to the list
+Contributor can have diferent states. PENDING/REJECTED/BANNED/MEMBER/ADMIN/OWNER. Only MEMBER/ADMIN/OWNER states allows access to the list
 
 Answers to List questions will be saved on Contributor
 
@@ -36,9 +36,8 @@ Detail can be of type singleSelect,  number,  text,  tags,  date, location
 Detail can be marked private and this will be defailt value for SelectedDetail private field. 
 Contributors cannot modify or delete details that were not created by them
 After Detail has a corresponding SelectedDetail it becomes immutable with some exeptions: 1) If all SelectedDetails are deleted for a Detail becomes mutable again. 2) If there is only one corresponding SelectedDetail and this SelectedDetails is created by Detail creator then this creator can modify or delete this detail but that will trigger corresponding SelectedDetail deletion. Warning shold be displayed for the user in this case.
-Only Detail createor can modify Detail unless it became immutable. 
+Only Detail createor can modify/delete Detail unless it became immutable. 
 Only SelectedDetail creator can delete SelectedDetail
-Only Detail creator can delete Detail and can only delete mutable details.
 If only one coresponding SelectedDetail exists and it is from the same contibutor he can delete SelectedDetail and modify Detail.
 If the only selecteddetail that exists for that detail is from the same Contributor as creator of the detail this creator can delete it with a warning message. IN this case Selected detail and all Values Personalizations will be deleted. 
 Contributors cannot modify or delete details that were not created by them.
@@ -52,7 +51,7 @@ Detail has a counter of all corresponding SelectedDetails
 Admins can mark Details to be default for a List
 Default details will be used to create initial set of SelectedDetails for new Contributors. THey will be authored by current Contributor.  After creation current contributor can delete them and/or select different details. 
 Details with no corresponding SelectedDetails from any contributors will be deleted automatically after upForDeletionDate is reached
-Detail upForDeletionDate is set to one week after last SelectedDetail for that Detail is deleted. If someone will create SelectedDetail based on that detail timer stops and reset to 0.
+Detail upForDeletionDate is set to one week after last SelectedDetail for that Detail is deleted and after Detail creation. If someone will create SelectedDetail based on that detail timer stops and reset to 0. 
 If Contributor that created detail leaves the List details stay. Detail is owned by the list not the contributor how created it.
 
 
@@ -84,16 +83,16 @@ Value types with explanation:
 
 ConsensusValue calculation by detail type:
 - singleSelect and tags: counts
-- number: histogram?
+- number: histogram
 - date: most number same date
-- text and location: only if it is the same more than 50% of answers?
+- text and location: only if it is the same more than 50% of answers
 
 All objects have created by/who fields and modified by/who and set to contributor
 
 | Model | Purpose |
 |---|---|
 | `User` | Account; only `username`. Membership in lists goes through `Contributor`. Deleted if user deletes his account.|
-| `Contributor` | Join entity between `User` and `List`, with a role (`OWNER`/`ADMIN`/`MEMBER`) and saved screens configs. Deleted if user or list is deleted. Deleted if user exit the list and confirms deletion of private data within this list.  When contributor leaves the list all objects created by him in this list are deleted apart from Details that has corresponding SelectedDetails not created by the leaving contributor. All created/updated by fields referencing this Contributor are replaced with "deleted contributor" palceholder.|
+| `Contributor` | Join entity between `User` and `List`. It has field status with values: PENDING/REJECTED/BANNED/MEMBER/ADMIN/OWNER. Deleted if user or list is deleted. Deleted if user exit the list and confirms deletion of private data within this list.  When contributor leaves the list all objects created by him in this list are deleted apart from Details that has corresponding SelectedDetails not created by the leaving contributor. All created/updated by fields referencing this Contributor are replaced with "deleted contributor" palceholder.|
 | `List` | A collection with name, contributors, items, and details. Can be Deleted By creator if no other contributors apart from creators exist. |
 | `Item` | A thing being reviewed. Can be deleted by creator if creator is the only one who has associated review. Admin can disable it which will remove Item from the list search. |
 | `Review` | A contributor's review of an item: a `ReviewLabel` plus a set of `Value`s. Can be deleted by creator. |
