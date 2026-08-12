@@ -7,16 +7,16 @@ This application allow to review anything. (Example: Wine)
 Configurable Lists with custom Details(Questions/fields) allow to decribe any kind of reviewd item. (Example: List would have a name Wine)
 
 User can join the list and become Contributor. 
-User cannot see any info in the list apart from statistics (Number of contributors, items, reviews).
-User can apply to enter the list and can be automatically accepted or with approval or with age confirmation. Thiw will be configured on the List page (Example: After answering "Are you over 21?" question) 
+User cannot see any info in the list apart from statistics (Number of contributors, items, reviews) before he becomes contributor.
+User can apply to enter the list and can be automatically accepted or with approval or with age confirmation. Thiw will be configured on the List page by Admins of that list. Admins can enable or diable hardcoded qualification filters: boolean on Contributor. "Are you over 21?", boolean on Contributor "Do you Accept Terms and conditions." Editable String on List "terms" which wil hold terms that editable on the list Edit Screen.  
 
 User can become COntributor and after automatic approval or manual apporoval by list admin. 
 Contributor can have diferent states.  pending , approved, rejected, banned. Only approved state allows access to the list
 
 Answers to List questions will be saved on Contributor
 
-List have details(Questions) which are visible to anyone (Example: Wine type, year, etc.) 
-Contributor can add new details(Questions) to the list but not edit or delete them
+List have details(Questions) which are visible to any Contributor of this list (Example: Wine type, year, etc.) 
+Contributor can add new details(Questions) to the list. Contributor can edit or delete them only if they are not used but other Contributors. 
 
 List have SelectedDetail which are details that are used and or customized by the contributor. 
 Contributor can drag details(Questions) to the seclectedDetails list the new  seclectedDetails will be created with link to detail(Question)
@@ -26,17 +26,16 @@ Contributor can cutomize Selected details (position, privacy, label display)
 Contributor can add Item to the list 
 Contributor can create a Review  by selecting predefined multiple choice (  FAVORITE, GOOD, OK, BAD, WISH_TO_TRY ) on the Item
 There is exactly one Review per contributor per item
-When contributor leaves the list all objects created by him in this list are deleted apart from Details that has corresponding SelectedDetails not created by the leaving contributor
+
 Contributor can and answer all questions/details by selecting possible options or setting  discrete values 
 Contributor can personalize option with  (sentiment, disabled, position) fields
 Contributor can personalize Value with  (sentiment that corrspond to a number/text/date) fields
 Sentiment is an int value from 1 to 5 that describe contributors opinion of something. 1 bad 5 good
 
 Detail can be of type singleSelect,  number,  text,  tags,  date, location
+Detail can be marked private and this will be defailt value for SelectedDetail private field. 
 Contributors cannot modify or delete details that were not created by them
-After Detail has a corresponding SelectedDetail it becomes immutable. 
-If all SelectedDetails are deleted for a Detail becomes mutable.
-After detail became immutable no one can modify it.
+After Detail has a corresponding SelectedDetail it becomes immutable with some exeptions: 1) If all SelectedDetails are deleted for a Detail becomes mutable again. 2) If there is only one corresponding SelectedDetail and this SelectedDetails is created by Detail creator then this creator can modify or delete this detail but that will trigger corresponding SelectedDetail deletion. Warning shold be displayed for the user in this case.
 Only Detail createor can modify Detail unless it became immutable. 
 Only SelectedDetail creator can delete SelectedDetail
 Only Detail creator can delete Detail and can only delete mutable details.
@@ -58,7 +57,7 @@ If Contributor that created detail leaves the List details stay. Detail is owned
 
 
 SelectedDetail holds one or many values depending on Detail configuration
-If a SelectedDetail is deleted, then corresponding Values, OptionPersonalizations, and ValuePersonalizations are deleted
+If a SelectedDetail is deleted, then corresponding Contributor's Values, OptionPersonalizations, and ValuePersonalizations are deleted
 Contributor can Select his own one or many Values for a DelectedDetail that is his personal answer.
 Contributor can change or delete his own Values. 
 Contributor cannot see change or delete other congtrobutors Values. 
@@ -94,7 +93,7 @@ All objects have created by/who fields and modified by/who and set to contributo
 | Model | Purpose |
 |---|---|
 | `User` | Account; only `username`. Membership in lists goes through `Contributor`. Deleted if user deletes his account.|
-| `Contributor` | Join entity between `User` and `List`, with a role (`OWNER`/`ADMIN`/`MEMBER`) and saved screens configs. Deleted if user or list is deleted. Deleted if user exit the list and confirms deletion of private data within this list. All created/updated by fields referencing this user are replaced with "deleted user" palceholder .|
+| `Contributor` | Join entity between `User` and `List`, with a role (`OWNER`/`ADMIN`/`MEMBER`) and saved screens configs. Deleted if user or list is deleted. Deleted if user exit the list and confirms deletion of private data within this list.  When contributor leaves the list all objects created by him in this list are deleted apart from Details that has corresponding SelectedDetails not created by the leaving contributor. All created/updated by fields referencing this Contributor are replaced with "deleted contributor" palceholder.|
 | `List` | A collection with name, contributors, items, and details. Can be Deleted By creator if no other contributors apart from creators exist. |
 | `Item` | A thing being reviewed. Can be deleted by creator if creator is the only one who has associated review. Admin can disable it which will remove Item from the list search. |
 | `Review` | A contributor's review of an item: a `ReviewLabel` plus a set of `Value`s. Can be deleted by creator. |
