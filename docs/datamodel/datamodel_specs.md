@@ -100,14 +100,21 @@ All objects have created by/who fields and modified by/who and set to contributo
 | `List` | A collection with name, contributors, items, and details. Can be Deleted By creator if no other contributors apart from creators exist. |
 | `Item` | A thing being reviewed. Can be deleted by creator if creator is the only one who has associated review. Admin can disable it which will remove Item from the list search. |
 | `Review` | A contributor's review of an item: a `ReviewLabel` plus a set of `Value`s. Can be deleted by creator. |
-| `Detail` | A configurable question/attribute definition (type, number range, options). Belongs to a list. Can be deleted by creator if it has one or no associated SelectedDetail and selected detail is from the creator |
+| `Detail` | A configurable question/attribute definition (name, type, number range, options). Belongs to a list. Can be deleted by creator if it has one or no associated SelectedDetail and selected detail is from the creator |
 | `SelectedDetail` | Per-contributor customization of a `Detail` (position, privacy, label display). private per contributor. Can be deleted by controbutor. |
-| `Option` | A choice for `singleSelect`/`tags` details. Deleted if detail is deleted. Can be deleted by creator if not selected by anyone else. |
+| `Option` | A choice for `singleSelect`/`tags` details. Has a name. Deleted if detail is deleted. Can be deleted by creator if not selected by anyone else. |
 | `Value` | An answer: number/text/date and/or selected options; belongs to a `Review`. Deleted if review is deleted Can be deleted by the creator. Deleted if SelectedDetail is deleted.
 | `ConsensusValue` | An answer: number/text/date and/or selected options; belongs to a `Detail` and an `Item` ( Item + Detail) and holds most popular/average value from all contributors. Deleted if corresponding item or detail is deleted. |
 | `OptionPersonalization` | Per-contributor tweak of an option (sentiment, disabled, position). they only affect that contributor’s personal experience and are invisible to others. Deleted if Option or Contributor is deleted. |
-| `ValuePersonalization` | Per-contributor opinion(sentiment) of Contributor's Value. they only affect that contributor’s personal experience and are invisible to others..   Deleted if Value or Contributor is deleted. |
+| `ValuePersonalization` | Per-contributor opinion(sentiment) of a Value. they only affect that contributor’s personal experience and are invisible to others..   Deleted if Value or Contributor is deleted. |
 
 
 
 
+These are gaps in the source spec, not resolved here — call them out before building against this doc:
+
+Numeric range configuration for number Details (bounds/step) isn't specified.
+Whether Contributors can add new Options to an existing Detail after its creation isn't stated directly (only inferred from Option having its own creator/deletion rule).
+Whether "Item holds aggregate values" (cached projection from reviews) is the same mechanism as ConsensusValue, or a second, distinct aggregate.
+Whether "saved screen configs" on Contributor (mentioned in an earlier draft) is still wanted.
+The exact set of statuses allowed to approve/reject/ban a PENDING Contributor isn't spelled out beyond "list admin" — ADMIN/OWNER is the natural reading but isn't stated as a rule.
