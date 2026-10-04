@@ -3,8 +3,10 @@
 > Derived from and refining [`datamodel/datamodel_specs.md`](datamodel/datamodel_specs.md).
 > Rule IDs (e.g. `DET-3`) are stable references for tickets, tests and code comments. Retired IDs
 > are kept as *removed* entries and never reused.
-> Decisions taken while refining are logged in [§12](#12-decision-log); remaining gaps are in
-> [§13](#13-open-questions).
+> Legal and app-store obligations (account deletion, data rights, user-generated content) are in
+> [§12](#12-accounts-data-rights-and-compliance).
+> Decisions taken while refining are logged in [§13](#13-decision-log); remaining gaps are in
+> [§14](#14-open-questions).
 
 ---
 
@@ -23,7 +25,7 @@ sees the **aggregate** (most popular) answers, and answers with overwhelming agr
 
 | Term | Meaning |
 |---|---|
-| **User** | An account. Holds only `username`. |
+| **User** | An account. Holds `username`, `appTermsAcceptedVersion` and `suspended` (§12). |
 | **List** | A reviewing community around one subject (e.g. *Wine*). |
 | **Contributor** | A User's membership in one List, with a status. |
 | **Detail** | A List-level attribute definition (name, kind, type, options, range). |
@@ -90,7 +92,8 @@ There is no `OWNER` role (decision 39).
 - `JOIN-5` A `REJECTED` User may re-apply, which returns them to `PENDING`.
 - `JOIN-6` A `BANNED` User cannot re-apply until an `ADMIN` lifts the ban (`MOD-2`), which sets the
   status to `REJECTED` (so they may re-apply). If the ban is not lifted within a year, the data is
-  purged (`MOD-2a`) but the `BANNED` record remains.
+  purged (`MOD-2a`) but the `BANNED` record remains — until the User deletes their account, which
+  removes it too (`ACC-4`).
 - `JOIN-7` On becoming an active member, the Contributor receives a SelectedDetail for every
   **default** Detail of the List (see `SEL-5`).
 - `JOIN-8` Qualification filters are enforced in the UI before applying, in both admission modes:
@@ -110,8 +113,9 @@ There is no `OWNER` role (decision 39).
   aggregates, answer counts and consensus (`AGG-8`), and they lose all access. Lifting the ban
   restores the data and its effect on aggregates. If the ban is not lifted within **one year**, the
   data is purged exactly like leaving (`LEAVE-3`, `LEAVE-4`); the Contributor record is kept with
-  status `BANNED` to block re-applying (`JOIN-6`). The banned user is not notified and cannot export
-  their data. Their Items and Details remain visible to others during the ban.
+  status `BANNED` to block re-applying (`JOIN-6`). The banned user is not notified, but may still
+  download their data (`DATA-1`). If they delete their account, the retained data is purged
+  immediately (`ACC-4`). Their Items and Details remain visible to others during the ban.
 - `MOD-3` An `ADMIN` may promote a `MEMBER` to `ADMIN`, and may demote an `ADMIN` who is junior to
   them. An `ADMIN` may step down to `MEMBER` voluntarily. Re-promotion sets a new `adminSince`.
 - `MOD-4` *(removed — no ownership transfer, decision 39)*
@@ -138,7 +142,7 @@ There is no `OWNER` role (decision 39).
 - `LEAVE-4` Every `createdBy` / `modifiedBy` / `invitedBy` reference to the departed Contributor on
   surviving objects is replaced with a "deleted contributor" placeholder.
 - `LEAVE-5` A Contributor is also deleted when its User or List is deleted. Deleting a User acts as
-  leaving every List they belong to.
+  leaving every List they belong to, in any status (`ACC-3`, `ACC-4`).
 - `LEAVE-6` When the last Contributor leaves a List, the List is deleted.
 
 ## 4. Lists
@@ -283,7 +287,9 @@ SelectedDetails exist for Opinions only.
   (`REV-4`), a Contributor leaving (`LEAVE-3`) or a ban purge (`MOD-2a`). The app warns before a user
   action causes this.
 - `ITEM-7` The photo follows the FactValue editing rules (`FVAL-3`); `ADMIN`s may also remove it.
-  Photos are stored in object storage.
+  Photos are stored in object storage. EXIF and other metadata (notably GPS location) are stripped
+  on upload. A photo records its uploader and is deleted when they delete their account (`ACC-4`);
+  the Item's photo slot then becomes empty and fillable again.
 
 ### 7.2 FactValues
 
@@ -442,8 +448,8 @@ Aggregates and consensus apply to Opinions only; Facts hold a single shared Fact
 
 | Entity | Belongs to | Unique per | Who can delete | Cascade-deleted when |
 |---|---|---|---|---|
-| User | — | `username` | the user (account deletion) | — |
-| Contributor | User, List | (User, List) | self (leaving); kept as `BANNED` when banned (`MOD-2a`) | User or List deleted |
+| User | — | `username` | the user (account deletion, `ACC-3`) | — |
+| Contributor | User, List | (User, List) | self (leaving); kept as `BANNED` when banned (`MOD-2a`) | User (incl. `BANNED` records, `ACC-4`) or List deleted |
 | List | — | — | sole Contributor (`LIST-3`) | last Contributor leaves (`LEAVE-6`) |
 | Item | List | uniqueness key (`UNIQ-1`) | creator, if sole reviewer | List deleted; Review count reaches zero (`ITEM-6`) |
 | Review | Contributor, Item | (Contributor, Item) | creator | Item or Contributor deleted |
@@ -456,6 +462,9 @@ Aggregates and consensus apply to Opinions only; Facts hold a single shared Fact
 | ConsensusValue | Item, Detail | (Item, Detail) | system (`AGG-5`) | Item or Detail deleted |
 | OptionPersonalization | Contributor, Option | (Contributor, Option) | owner | Option or Contributor deleted; dropped on remap conflict (`ARC-5`) |
 | ValuePersonalization | Contributor, Value | (Contributor, Value) | owner | Value or Contributor deleted |
+| Item photo | Item, uploading User | one per Item | uploader's account deletion; `ADMIN` removal (`ITEM-7`) | Item deleted; uploader deletes account (`ACC-4`) |
+| Report | reporting User, reported object | — | system, once resolved (`UGC-1`) | reporter deletes account; reported object deleted |
+| Block | blocking User, blocked User | (blocker, blocked) | blocker | either User deleted |
 
 ### 11.3 Permission matrix
 
@@ -484,8 +493,78 @@ Aggregates and consensus apply to Opinions only; Facts hold a single shared Fact
 | Archive Opinion | — | own only | ✓ |
 | Use / regenerate own invite link | — | ✓ | ✓ |
 | Delete List | — | if sole contributor | if sole contributor |
+| Report content (`UGC-1`) | ✓ (Lists from search) | ✓ | ✓ |
+| Block a User (`UGC-3`) | ✓ | ✓ | ✓ |
+| Download my data (`DATA-1`) | ✓ | ✓ | ✓ |
+| Delete my account (`ACC-3`) | ✓ | ✓ | ✓ |
 
-## 12. Decision log
+Permissions above apply only to Users who are not `suspended` (`UGC-2`); a suspended User may still
+download their data and delete their account.
+
+## 12. Accounts, data rights and compliance
+
+The app ships on the App Store and Google Play, signs in with email, Sign in with Apple and Google,
+serves EU users, and hosts user-generated content (List names and terms, Detail and Option names,
+FactValues, photos). This section turns the resulting obligations into rules:
+
+| Source | Obligation | Rules |
+|---|---|---|
+| App Store Guideline 5.1.1(v) | In-app account **deletion** (not deactivation) incl. personal data; revoke Sign in with Apple tokens | `ACC-3`, `ACC-4` |
+| Google Play User Data policy | In-app deletion path **and** a web link to request deletion; retention only for legal/security reasons, disclosed | `ACC-3`, `DATA-2` |
+| GDPR Art. 17 (erasure), Art. 5(1)(e) (storage limitation) | Delete on request; keep no longer than needed | `ACC-4..6`, `DATA-2` |
+| GDPR Art. 15 (access), Art. 20 (portability) | Give users their data, machine-readable, within one month | `DATA-1` |
+| GDPR Art. 8, COPPA | Children's consent | `ACC-1` |
+| App Store Guideline 1.2, Google Play UGC policy | Terms with zero tolerance, content filtering, reporting, blocking, developer acts within 24 h, contact info | `ACC-1`, `ACC-2`, `UGC-1..4` |
+
+### 12.1 Accounts
+
+- `ACC-1` Creating an account requires confirming the User is **16 or older** and accepting the
+  app-level Terms of Use (`appTermsAcceptedVersion` on User). The Terms state zero tolerance for
+  objectionable content and abusive users. When the Terms change, Users must re-accept them on their
+  next visit. This is separate from any List's own `terms` and "over 21" filter (`JOIN-4`).
+- `ACC-2` The privacy policy, the Terms and a developer contact are reachable from inside the app and
+  from the store listings.
+- `ACC-3` **Account deletion** is available in-app, from an easy-to-find place in Settings, with a
+  confirmation step. A public web page lets a User request the same deletion without the app.
+- `ACC-4` Account deletion is immediate and complete:
+  - it acts as leaving every List (`LEAVE-3`, `LEAVE-4`) in every status, including `BANNED`
+    Contributor records and data retained under `MOD-2a`;
+  - it deletes the User's photos (`ITEM-7`), reports they filed, their blocks, and the User record
+    with its Supabase auth identity;
+  - it revokes the User's Sign in with Apple tokens through Apple's REST API.
+- `ACC-5` What survives deletion is only shared List content: Items reviewed by others, Facts,
+  Options, FactValues and Opinions used by others. Every reference to the User on it is replaced with
+  the "deleted contributor" placeholder (`LEAVE-4`).
+- `ACC-6` Deleted data also leaves backups and logs once they age out of the hosting provider's
+  retention window. The privacy policy states that window.
+
+### 12.2 Data rights and retention
+
+- `DATA-1` **Download my data**: any User, in any status (including `BANNED` and `suspended`), can
+  download from the app a machine-readable JSON file of everything tied to them across all Lists:
+  User fields, Contributors, Reviews, Values, SelectedDetails, personalizations, `screenConfig`, and
+  the Items, Details, Options, FactValues and photos they created.
+- `DATA-2` Personal data is kept only as long as needed: account data until account deletion, a
+  banned Contributor's data at most one year (`MOD-2a`), resolved reports only as long as moderation
+  needs them. Retention and its reasons are disclosed in the privacy policy and the stores' data
+  forms (App Store privacy labels, Google Play Data safety).
+
+### 12.3 User-generated content
+
+- `UGC-1` Any User may **report** a List (name or terms), an Item, a photo, a Fact, Option or Opinion
+  name, or a text FactValue. A report goes both to that List's `ADMIN`s and to the developer's
+  moderation queue.
+- `UGC-2` The developer acts on reports within **24 hours**: archiving or removing the content,
+  and/or **suspending** the offending User platform-wide (`suspended` on User). A suspended User
+  cannot use the app except to download their data or delete their account; each of their
+  Contributors is treated as `BANNED` (`MOD-2a`), and lifting the suspension restores them.
+- `UGC-3` A User may **block** another User. Lists, Items' photos, Options and Opinions created by
+  the blocked User are hidden from the blocker, and the blocked User's invite links stop working for
+  the blocker. Blocks are private and the blocked User is not notified.
+- `UGC-4` Text content shown to other Users (List names and terms, Detail and Option names, text
+  FactValues) passes an objectionable-content filter when it is written.
+
+## 13. Decision log
 
 | # | Question | Decision |
 |---|---|---|
@@ -531,11 +610,19 @@ Aggregates and consensus apply to Opinions only; Facts hold a single shared Fact
 | 40 | Succession | ADMINs may step down; last ADMIN gone → longest-tenured MEMBER promoted; last contributor gone → List deleted; only a sole contributor deletes a List (`MOD-6`, `LEAVE-6`, `LIST-3`) |
 | 41 | Qualification filters | Enforced in UI before applying; terms changes / newly enabled filters prompt existing members; Approval→Automatic admits PENDING (`JOIN-8..10`) |
 | 42 | Private answer leakage | Displayed counts use non-private Values only; private Values affect only the winner above the threshold (`PRIV-2`) |
-| 43 | Bans | Data kept but hidden and excluded from aggregates; restored on unban; purged after one year (`MOD-2a`) |
+| 43 | Bans | Data kept but hidden and excluded from aggregates; restored on unban; purged after one year (`MOD-2a`) — revised by 48 |
 | 44 | Unreviewed Items | Creating an Item requires the creator's Review; an Item with zero Reviews is deleted (`ITEM-1`, `ITEM-6`) |
 | 45 | Personalizing Facts | OptionPersonalization applies to Fact Options; no personalization of FactValues (`PER-1`, `PER-2`) |
+| 46 | Account deletion | In-app plus a public web page; immediate; revokes Sign in with Apple tokens; required by App Store 5.1.1(v) and Google Play (`ACC-3`, `ACC-4`) |
+| 47 | Data export | Self-service in-app JSON download for every User, in any status (`DATA-1`) |
+| 48 | Banned data vs. user rights | One-year retention yields to account deletion (purged immediately); banned users may export (`MOD-2a`, `ACC-4`, `DATA-1`) |
+| 49 | Minimum age | 16+ at account creation, avoiding GDPR Art. 8 parental consent and COPPA (`ACC-1`) |
+| 50 | UGC reports | Go to the List's ADMINs **and** a developer queue; developer acts within 24 h (`UGC-1`, `UGC-2`) |
+| 51 | Platform suspension | Developer can suspend a User app-wide; their Contributors are treated as `BANNED` (`UGC-2`) |
+| 52 | Blocking and filtering | Users can block Users (hides their content from the blocker); text UGC is filtered on write (`UGC-3`, `UGC-4`) |
+| 53 | Photos | EXIF/GPS stripped on upload; deleted with the uploader's account (`ITEM-7`) |
 
-## 13. Open questions
+## 14. Open questions
 
 - **Unarchiving a colliding Item.** Archived Items are excluded from uniqueness (`ITEM-3`). Should
   unarchiving be blocked when the Item would collide with a non-archived one (like `UNIQ-3`), or
@@ -543,3 +630,8 @@ Aggregates and consensus apply to Opinions only; Facts hold a single shared Fact
 - **Options on mutable Details.** `DET-6` forbids renaming/deleting Options only once a Detail is in
   use; while mutable (`DET-7`, `FACT-3`) the creator/admins edit Options freely. Confirm this is
   intended.
+- **Backup retention window** (`ACC-6`). It depends on the Supabase plan and point-in-time-recovery
+  settings; the number must be fixed and written into the privacy policy.
+- **Photo moderation.** `UGC-4` filters text only. Decide whether photos also need automated image
+  moderation, or whether reporting (`UGC-1`) plus the 24-hour response is enough.
+- **Report retention.** How long resolved reports are kept (`DATA-2`).
