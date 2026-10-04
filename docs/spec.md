@@ -14,7 +14,7 @@ Goods lets groups of people review **anything**. A **List** defines a subject (e
 configurable set of **Details**. A Detail is either a **Fact** — a shared attribute that identifies
 an Item (e.g. *producer*, *vintage*) — or an **Opinion** question each member answers privately
 (e.g. *taste*, *price paid*). Members (**Contributors**) add **Items** (e.g. a specific bottle)
-described by their Facts, give each one a **Review** label, and answer Opinion Details. Each
+described by their Facts, give each one a **Review** label, and answer Opinions. Each
 Contributor tailors their own view of the List and keeps their individual answers private; everyone
 sees the **aggregate** (most popular) answers, and answers with overwhelming agreement are frozen as
 **consensus** and shown as the default for anyone who hasn't answered.
@@ -28,15 +28,15 @@ sees the **aggregate** (most popular) answers, and answers with overwhelming agr
 | **Contributor** | A User's membership in one List, with a status. |
 | **Detail** | A List-level attribute definition (name, kind, type, options, range). |
 | **Fact** | A Detail of kind `FACT`: one shared value per Item, describing what the Item *is*. |
-| **Opinion Detail** | A Detail of kind `OPINION`: each Contributor answers it privately per Item. |
+| **Opinion** | A Detail of kind `OPINION`: each Contributor answers it privately per Item. |
 | **Option** | A predefined choice of a `singleSelect` or `tags` Detail. |
 | **FactValue** | The shared value of one Fact for one Item. |
 | **Name template** | List-level pattern that generates every Item's `name` from its FactValues. |
-| **SelectedDetail** | A Contributor's adoption of an Opinion Detail into their own view, with personal display settings. |
+| **SelectedDetail** | A Contributor's adoption of an Opinion into their own view, with personal display settings. |
 | **Item** | A thing being reviewed within a List (e.g. one specific wine). |
 | **Review** | One Contributor's verdict on one Item: a required label plus Values. |
-| **Value** | One Contributor's answer to one Opinion Detail for one Item. |
-| **Aggregate value** | The most popular answer to an Opinion Detail for an Item, computed on the fly. |
+| **Value** | One Contributor's answer to one Opinion for one Item. |
+| **Aggregate value** | The most popular answer to an Opinion for an Item, computed on the fly. |
 | **ConsensusValue** | A stored aggregate with overwhelming agreement (`AGG-4`); no longer computed live. |
 | **OptionPersonalization** | A Contributor's private tweak of an Option (sentiment, disabled, position). |
 | **ValuePersonalization** | A Contributor's private sentiment about a Value. |
@@ -127,8 +127,8 @@ There is no `OWNER` role (decision 39).
 - `LEAVE-2` Any Contributor, including any `ADMIN`, may leave at any time (`MOD-6` keeps the List
   moderated).
 - `LEAVE-3` Everything the Contributor created in the List is deleted — Reviews, Values,
-  SelectedDetails, personalizations, Opinion Details and their Options — **except**:
-  - Opinion Details that still have SelectedDetails belonging to other Contributors;
+  SelectedDetails, personalizations, Opinions and their Options — **except**:
+  - Opinions that still have SelectedDetails belonging to other Contributors;
   - Facts, which are never deleted (`FACT-4`);
   - Options added to a Detail that survives — Options belong to their Detail;
   - FactValues and photos on Items that survive.
@@ -149,7 +149,7 @@ There is no `OWNER` role (decision 39).
   least one **required** Fact (`FACT-5`).
 - `LIST-3` A List may be deleted only by its sole Contributor. It is also deleted automatically when
   its last Contributor leaves (`LEAVE-6`).
-- `LIST-4` Admins can mark Opinion Details as **default** for the List (`SEL-5`, `SEL-7`).
+- `LIST-4` Admins can mark Opinions as **default** for the List (`SEL-5`, `SEL-7`).
 - `LIST-5` Admins define the List's **name template**, e.g. `{Producer} {Vintage}` (§7.3). It must
   reference at least one required, non-archived Fact. If none is defined, the default template is
   all required Facts in position order, separated by spaces.
@@ -172,8 +172,8 @@ There is no `OWNER` role (decision 39).
 - `DET-1a` Every Detail has a `kind`: `OPINION` (answered privately per Contributor through
   SelectedDetails and Values, §6, §8) or `FACT` (one shared FactValue per Item, §5.4, §7.2).
 - `DET-2` A Detail belongs to a List and is visible to every active member of that List.
-- `DET-3` Any active member may create Opinion Details. Only `ADMIN`s create Facts (`FACT-1`).
-- `DET-4` An Opinion Detail has a `private` flag, which is the default for the `private` field of
+- `DET-3` Any active member may create Opinions. Only `ADMIN`s create Facts (`FACT-1`).
+- `DET-4` An Opinion has a `private` flag, which is the default for the `private` field of
   SelectedDetails created from it. Facts have no `private` flag.
 - `DET-5` A `number` Detail has optional `min`, `max` and `step`. When set, Values must satisfy
   them; a bounded Detail may render as a slider, an unbounded one as a numeric input.
@@ -182,9 +182,9 @@ There is no `OWNER` role (decision 39).
   use (`DET-7a`), its Options can be neither renamed nor deleted — to fix one, add the correct Option
   and remap (`ARC-5`). Options are deleted only with their Detail.
 
-### 5.2 Mutability of Opinion Details
+### 5.2 Mutability of Opinions
 
-An Opinion Detail is **mutable** while no other Contributor depends on it.
+An Opinion is **mutable** while no other Contributor depends on it.
 
 - `DET-7` While mutable, only the Detail's creator may modify or delete it (including its Options).
 - `DET-7a` While in use (immutable), the following changes remain allowed, by the creator or any
@@ -199,15 +199,15 @@ An Opinion Detail is **mutable** while no other Contributor depends on it.
   creator's Values and personalizations for it, `SEL-4`). The Detail is then mutable again and the
   requested edit/delete proceeds.
 - `DET-10` When all SelectedDetails of a Detail are deleted, it becomes mutable again.
-- `DET-11` Each Opinion Detail persists `selectedDetailCount`, maintained in the same transaction as
+- `DET-11` Each Opinion persists `selectedDetailCount`, maintained in the same transaction as
   every SelectedDetail insert/delete.
 
-### 5.3 Automatic cleanup of Opinion Details
+### 5.3 Automatic cleanup of Opinions
 
-- `DET-12` An Opinion Detail has `upForDeletionDate`. It is set to *now + 7 days* when the Detail is
+- `DET-12` An Opinion has `upForDeletionDate`. It is set to *now + 7 days* when the Detail is
   created and whenever its last SelectedDetail is deleted.
 - `DET-13` Creating a SelectedDetail for the Detail clears `upForDeletionDate`.
-- `DET-14` An Opinion Detail with zero SelectedDetails is deleted automatically once
+- `DET-14` An Opinion with zero SelectedDetails is deleted automatically once
   `upForDeletionDate` passes. This applies to default and archived Details too.
 
 ### 5.4 Facts
@@ -228,12 +228,12 @@ An Opinion Detail is **mutable** while no other Contributor depends on it.
 ### 5.5 Archiving and remapping
 
 - `ARC-1` **Who archives**: `ADMIN`s archive and unarchive Facts, Options of any Detail, and Items
-  (`ITEM-3`). Opinion Details may be archived by their creator or any `ADMIN`.
+  (`ITEM-3`). Opinions may be archived by their creator or any `ADMIN`.
 - `ARC-2` **Archived Option**: hidden from pickers and new answers; existing Values and FactValues
   that use it keep displaying it and can still be filtered and searched on.
 - `ARC-3` **Archived Fact**: hidden from Item create/edit forms, no longer `required`, excluded from
   the uniqueness key (`UNIQ-1`); existing FactValues still display and are searchable.
-- `ARC-4` **Archived Opinion Detail**: hidden from the "available Details" picker (no new
+- `ARC-4` **Archived Opinion**: hidden from the "available Details" picker (no new
   SelectedDetails) and removed from the default set. Existing SelectedDetails stay **read-only**:
   owners still see their Values and may delete the SelectedDetail, but cannot add or change Values.
   Aggregates are still shown. The consensus job neither creates nor re-checks ConsensusValues for
@@ -246,11 +246,11 @@ An Opinion Detail is **mutable** while no other Contributor depends on it.
 
 ## 6. SelectedDetails (personal view)
 
-SelectedDetails exist for Opinion Details only.
+SelectedDetails exist for Opinions only.
 
-- `SEL-1` A SelectedDetail links one Contributor to one Opinion Detail; at most one per
+- `SEL-1` A SelectedDetail links one Contributor to one Opinion; at most one per
   (Contributor, Detail).
-- `SEL-2` A Contributor builds their view by dragging Opinion Details into their SelectedDetails
+- `SEL-2` A Contributor builds their view by dragging Opinions into their SelectedDetails
   list, which creates a SelectedDetail referencing the Detail.
 - `SEL-3` A Contributor customizes their own SelectedDetails: `position`, `private` (`PRIV-2`),
   label display. SelectedDetails are private to their Contributor.
@@ -334,7 +334,7 @@ SelectedDetails exist for Opinion Details only.
 - `REV-2` A Review has a **required** label: `FAVORITE`, `GOOD`, `OK`, `BAD` or `WISH_TO_TRY`.
   The label can be changed but not cleared. Changing the label (including to `WISH_TO_TRY`) never
   affects the Review's Values, and `WISH_TO_TRY` Reviews count toward aggregates like any other.
-- `REV-3` A Contributor must create a Review (choose a label) before answering any Opinion Details
+- `REV-3` A Contributor must create a Review (choose a label) before answering any Opinions
   for that Item. The Review then contains their Values. An Item's creator creates their Review
   together with the Item (`ITEM-1`).
 - `REV-4` The creator may delete their Review; its Values (and their ValuePersonalizations) are
@@ -345,7 +345,7 @@ SelectedDetails exist for Opinion Details only.
 ### 8.1 Values
 
 - `VAL-1` A Value belongs to one Review and one SelectedDetail, so it identifies Contributor, Item
-  and Opinion Detail. At most one Value per (Review, Detail).
+  and Opinion. At most one Value per (Review, Detail).
 - `VAL-2` A Value holds the answer matching the Detail type (`DET-1`), within the Detail's range
   (`DET-5`). Selected Options must belong to the same Detail and must not be archived at the time
   of answering.
@@ -361,7 +361,7 @@ SelectedDetails exist for Opinion Details only.
 Personalizations affect only their owner's experience and are never visible to others.
 
 - `PER-1` **OptionPersonalization** — per (Contributor, Option): `sentiment`, `disabled`,
-  `position`. Applies to Options of both Opinion Details and Facts. Deleted when the Option or the
+  `position`. Applies to Options of both Opinions and Facts. Deleted when the Option or the
   Contributor is deleted.
 - `PER-2` **ValuePersonalization** — per (Contributor, Value): `sentiment`, attached to the
   number/text/date of that Value. Deleted when the Value or the Contributor is deleted. FactValues
@@ -397,7 +397,7 @@ Personalizations affect only their owner's experience and are never visible to o
 
 ## 10. Aggregates and consensus
 
-Aggregates and consensus apply to Opinion Details only; Facts hold a single shared FactValue.
+Aggregates and consensus apply to Opinions only; Facts hold a single shared FactValue.
 
 ### 10.1 Aggregate value (live)
 
@@ -451,7 +451,7 @@ Aggregates and consensus apply to Opinion Details only; Facts hold a single shar
 | Detail (`FACT`) | List | — | nobody (`FACT-4`) | List deleted |
 | Option | Detail | — | nobody once Detail in use (archive/remap instead, `ARC-5`) | Detail deleted |
 | FactValue | Item, Fact | (Item, Fact) | — (edited, `FVAL-3`) | Item deleted |
-| SelectedDetail | Contributor, Opinion Detail | (Contributor, Detail) | owner | Detail or Contributor deleted |
+| SelectedDetail | Contributor, Opinion | (Contributor, Detail) | owner | Detail or Contributor deleted |
 | Value | Review, SelectedDetail | (Review, Detail) | creator | Review or SelectedDetail deleted |
 | ConsensusValue | Item, Detail | (Item, Detail) | system (`AGG-5`) | Item or Detail deleted |
 | OptionPersonalization | Contributor, Option | (Contributor, Option) | owner | Option or Contributor deleted; dropped on remap conflict (`ARC-5`) |
@@ -464,11 +464,11 @@ Aggregates and consensus apply to Opinion Details only; Facts hold a single shar
 | Search Lists, view stats | ✓ | ✓ | ✓ |
 | Apply to join | ✓ except BANNED | — | — |
 | View Details, Facts, Items, aggregates | — | ✓ | ✓ |
-| Create Opinion Detail / Item | — | ✓ | ✓ |
+| Create Opinion / Item | — | ✓ | ✓ |
 | Create / edit Facts, name template | — | — | ✓ |
 | Add Option to any Detail | — | ✓ | ✓ |
-| Edit/delete own Opinion Detail while mutable | — | ✓ | ✓ |
-| Allowed changes to in-use Opinion Detail (`DET-7a`) | — | own only | ✓ |
+| Edit/delete own Opinion while mutable | — | ✓ | ✓ |
+| Allowed changes to in-use Opinion (`DET-7a`) | — | own only | ✓ |
 | Fill empty FactValue / photo | — | ✓ | ✓ |
 | Change non-empty FactValue / photo | — | own Item, if sole reviewer | ✓ |
 | Remove photo | — | — | ✓ |
@@ -481,7 +481,7 @@ Aggregates and consensus apply to Opinion Details only; Facts hold a single shar
 | Configure admission, filters, terms, unlisted | — | — | ✓ |
 | Mark Details as default | — | — | ✓ |
 | Archive Item / Fact / Option; remap Options | — | — | ✓ |
-| Archive Opinion Detail | — | own only | ✓ |
+| Archive Opinion | — | own only | ✓ |
 | Use / regenerate own invite link | — | ✓ | ✓ |
 | Delete List | — | if sole contributor | if sole contributor |
 
@@ -524,7 +524,7 @@ Aggregates and consensus apply to Opinion Details only; Facts hold a single shar
 | 33 | Item fields | FactValues, one optional photo, `archived`, audit fields; no description (`ITEM-5`, `ITEM-7`) |
 | 34 | Disable vs archive | Single admin-only `archived` flag replaces disable; excluded from search, uniqueness and stats (`ITEM-3`) |
 | 35 | Changes to in-use Details | No rename, retype, `step` change or narrowing; widening and `private` default allowed (`DET-7a`) |
-| 36 | Archiving Opinion Details | Creator or admins; SelectedDetails read-only; aggregates shown; consensus job skips (`ARC-4`) |
+| 36 | Archiving Opinions | Creator or admins; SelectedDetails read-only; aggregates shown; consensus job skips (`ARC-4`) |
 | 37 | Default Details | Not protected from cleanup or creator; marking default backfills existing members (`SEL-5`, `SEL-7`) |
 | 38 | Fact display | Hidden on Item page by default, shown via `screenConfig`; name always visible (`NAME-6`) |
 | 39 | OWNER role | Dropped. Creator is first ADMIN; ADMINs ranked by `adminSince` and act only on junior ADMINs (`MOD-2`, `MOD-3`, `MOD-5`) |
