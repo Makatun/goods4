@@ -182,9 +182,10 @@ There is no `OWNER` role (decision 39).
 - `DET-5` A `number` Detail has optional `min`, `max` and `step`. When set, Values must satisfy
   them; a bounded Detail may render as a slider, an unbounded one as a numeric input.
 - `DET-6` `singleSelect` and `tags` Details have Options, each with a name and position. **Any
-  active member may add an Option to any Detail**, of either kind, at any time. Once a Detail is in
-  use (`DET-7a`), its Options can be neither renamed nor deleted — to fix one, add the correct Option
-  and remap (`ARC-5`). Options are deleted only with their Detail.
+  active member may add an Option to any Detail**, of either kind, at any time. While the Detail is
+  unused (`DET-7`, `FACT-3`), its Options may be renamed and deleted freely, since no answer refers
+  to them yet. Once it is in use (`DET-7a`), its Options can be neither renamed nor deleted — to fix
+  one, add the correct Option and remap (`ARC-5`); they are then deleted only with their Detail.
 
 ### 5.2 Mutability of Opinions
 
@@ -277,7 +278,7 @@ SelectedDetails exist for Opinions only.
 - `ITEM-3` `ADMIN`s may **archive** (and unarchive) an Item. An archived Item is hidden from List
   search and cannot receive new Reviews; Contributors who already reviewed it still see it and their
   Review. Archived Items are excluded from uniqueness checks (`UNIQ-1`) and from List statistics
-  (`MEM-2`).
+  (`MEM-2`). Unarchiving is blocked when the Item would collide with a non-archived one (`UNIQ-3`).
 - `ITEM-4` Items do not store aggregates; they are computed on the fly or read from
   ConsensusValue (§10).
 - `ITEM-5` An Item consists of: its FactValues, the generated `name` (§7.3), one optional photo,
@@ -324,8 +325,8 @@ SelectedDetails exist for Opinions only.
   No two non-archived Items in a List may have equal keys.
 - `UNIQ-2` Equality per Fact follows `AGG-2`; `tags` compare as sets of Options. A missing
   FactValue is distinct from everything, including another missing one.
-- `UNIQ-3` Uniqueness is checked when an Item is created and when its FactValues are edited. A
-  violating create or edit is blocked and the existing Item is shown, with an option to open (and
+- `UNIQ-3` Uniqueness is checked when an Item is created, when its FactValues are edited, and when
+  it is unarchived. A violating create, edit or unarchive is blocked and the existing Item is shown, with an option to open (and
   review) it.
 - `UNIQ-4` Changes to the key itself (a Fact becoming required, or archived) may produce collisions
   among existing Items; these are allowed and flagged to admins, not blocked. Since Items are never
@@ -463,7 +464,7 @@ Aggregates and consensus apply to Opinions only; Facts hold a single shared Fact
 | OptionPersonalization | Contributor, Option | (Contributor, Option) | owner | Option or Contributor deleted; dropped on remap conflict (`ARC-5`) |
 | ValuePersonalization | Contributor, Value | (Contributor, Value) | owner | Value or Contributor deleted |
 | Item photo | Item, uploading User | one per Item | uploader's account deletion; `ADMIN` removal (`ITEM-7`) | Item deleted; uploader deletes account (`ACC-4`) |
-| Report | reporting User, reported object | — | system, once resolved (`UGC-1`) | reporter deletes account; reported object deleted |
+| Report | reporting User, reported object | — | system, one year after resolution (`UGC-1`) | reporter deletes account; reported object deleted |
 | Block | blocking User, blocked User | (blocker, blocked) | blocker | either User deleted |
 
 ### 11.3 Permission matrix
@@ -535,8 +536,9 @@ FactValues, photos). This section turns the resulting obligations into rules:
 - `ACC-5` What survives deletion is only shared List content: Items reviewed by others, Facts,
   Options, FactValues and Opinions used by others. Every reference to the User on it is replaced with
   the "deleted contributor" placeholder (`LEAVE-4`).
-- `ACC-6` Deleted data also leaves backups and logs once they age out of the hosting provider's
-  retention window. The privacy policy states that window.
+- `ACC-6` Deleted data also leaves backups and logs once they age out, **within 30 days**, which
+  the privacy policy states. Backup and log retention (including point-in-time recovery) is never
+  configured longer than 30 days.
 
 ### 12.2 Data rights and retention
 
@@ -545,24 +547,32 @@ FactValues, photos). This section turns the resulting obligations into rules:
   User fields, Contributors, Reviews, Values, SelectedDetails, personalizations, `screenConfig`, and
   the Items, Details, Options, FactValues and photos they created.
 - `DATA-2` Personal data is kept only as long as needed: account data until account deletion, a
-  banned Contributor's data at most one year (`MOD-2a`), resolved reports only as long as moderation
-  needs them. Retention and its reasons are disclosed in the privacy policy and the stores' data
+  banned or suspended Contributor's data at most one year (`MOD-2a`, `UGC-2`), resolved reports one
+  year after resolution (`UGC-1`). Retention and its reasons are disclosed in the privacy policy and the stores' data
   forms (App Store privacy labels, Google Play Data safety).
 
 ### 12.3 User-generated content
 
 - `UGC-1` Any User may **report** a List (name or terms), an Item, a photo, a Fact, Option or Opinion
   name, or a text FactValue. A report goes both to that List's `ADMIN`s and to the developer's
-  moderation queue.
+  moderation queue. A resolved report is deleted one year after resolution, or immediately when
+  the reporter deletes their account (`ACC-4`). Photos are moderated through reports only — there is
+  no automated image scanning.
 - `UGC-2` The developer acts on reports within **24 hours**: archiving or removing the content,
-  and/or **suspending** the offending User platform-wide (`suspended` on User). A suspended User
-  cannot use the app except to download their data or delete their account; each of their
-  Contributors is treated as `BANNED` (`MOD-2a`), and lifting the suspension restores them.
-- `UGC-3` A User may **block** another User. Lists, Items' photos, Options and Opinions created by
-  the blocked User are hidden from the blocker, and the blocked User's invite links stop working for
-  the blocker. Blocks are private and the blocked User is not notified.
+  and/or **suspending** the offending User platform-wide (`suspended` on User):
+  - only the developer suspends, through an admin script or Edge Function;
+  - a suspension lasts until the developer lifts it;
+  - a suspended User sees a suspension screen with the reason and an appeal contact, and cannot use
+    the app except to download their data or delete their account;
+  - each of their Contributors is treated as `BANNED` (`MOD-2a`), and the one-year purge applies;
+  - lifting the suspension restores each Contributor to its previous status, keeping `adminSince`.
+- `UGC-3` A User may **block** another User. The blocked User cannot apply to any List where the
+  blocker is an `ADMIN`, and the blocker's invite links do not work for them. The blocked User's
+  content stays visible to the blocker. Blocks are private and the blocked User is not notified.
 - `UGC-4` Text content shown to other Users (List names and terms, Detail and Option names, text
-  FactValues) passes an objectionable-content filter when it is written.
+  FactValues) is checked on write against a word list with whole-word matching. Matching text is
+  **rejected** with a "contains disallowed words" message. The developer maintains an allowlist of
+  legitimate words that would otherwise match (e.g. "Cockburn").
 
 ## 13. Decision log
 
@@ -619,19 +629,17 @@ FactValues, photos). This section turns the resulting obligations into rules:
 | 49 | Minimum age | 16+ at account creation, avoiding GDPR Art. 8 parental consent and COPPA (`ACC-1`) |
 | 50 | UGC reports | Go to the List's ADMINs **and** a developer queue; developer acts within 24 h (`UGC-1`, `UGC-2`) |
 | 51 | Platform suspension | Developer can suspend a User app-wide; their Contributors are treated as `BANNED` (`UGC-2`) |
-| 52 | Blocking and filtering | Users can block Users (hides their content from the blocker); text UGC is filtered on write (`UGC-3`, `UGC-4`) |
+| 52 | Blocking and filtering | Users can block Users; text UGC is filtered on write (`UGC-3`, `UGC-4`) — revised by 59, 61 |
 | 53 | Photos | EXIF/GPS stripped on upload; deleted with the uploader's account (`ITEM-7`) |
+| 54 | Unarchiving a colliding Item | Blocked, like creating a duplicate; the conflicting Item is shown (`ITEM-3`, `UNIQ-3`) |
+| 55 | Options on unused Details | Freely renamed and deleted while unused; frozen once in use (`DET-6`) |
+| 56 | Backup retention | Deleted data leaves backups within 30 days; retention never configured longer (`ACC-6`) |
+| 57 | Photo moderation | Reports only; no automated image scanning (`UGC-1`) |
+| 58 | Report retention | One year after resolution (`UGC-1`, `DATA-2`) |
+| 59 | Blocking | Keeps the blocked User out of Lists where the blocker is ADMIN and off the blocker's invite links; content stays visible (`UGC-3`) |
+| 60 | Suspension details | Developer only; until lifted; one-year purge; lifting restores status and seniority; suspension screen with reason and appeal contact (`UGC-2`) |
+| 61 | Text filter | Reject on write; word list, whole-word matching, developer-maintained allowlist (`UGC-4`) |
 
 ## 14. Open questions
 
-- **Unarchiving a colliding Item.** Archived Items are excluded from uniqueness (`ITEM-3`). Should
-  unarchiving be blocked when the Item would collide with a non-archived one (like `UNIQ-3`), or
-  tolerated and flagged (like `UNIQ-4`)?
-- **Options on mutable Details.** `DET-6` forbids renaming/deleting Options only once a Detail is in
-  use; while mutable (`DET-7`, `FACT-3`) the creator/admins edit Options freely. Confirm this is
-  intended.
-- **Backup retention window** (`ACC-6`). It depends on the Supabase plan and point-in-time-recovery
-  settings; the number must be fixed and written into the privacy policy.
-- **Photo moderation.** `UGC-4` filters text only. Decide whether photos also need automated image
-  moderation, or whether reporting (`UGC-1`) plus the 24-hour response is enough.
-- **Report retention.** How long resolved reports are kept (`DATA-2`).
+None at present.
