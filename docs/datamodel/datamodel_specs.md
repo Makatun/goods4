@@ -1,120 +1,85 @@
-## Domain model overview
+# Domain model overview
 
+> Summary of the data model. The authoritative rules are in [`../spec.md`](../spec.md); rule IDs
+> in brackets (e.g. `DET-7`) point there. When this file and the spec disagree, the spec wins.
 
-(Example: )
+## The idea
 
-This application allow to review anything. (Example: Wine)
-Configurable Lists with custom Details(Questions/fields) allow to decribe any kind of reviewd item. (Example: List would have a name Wine)
+Goods lets groups of people review anything (example: *Wine*).
 
-User can join the list and become Contributor. 
-User cannot see any info in the list apart from statistics (Number of contributors, items, reviews) before he becomes contributor.
-User can apply to enter the list and can be automatically accepted or with approval or with age confirmation. Thiw will be configured on the List page by Admins of that list. Admins can enable or diable hardcoded qualification filters: boolean on Contributor. "Are you over 21?", boolean on Contributor "Do you Accept Terms and conditions." Editable String on List "terms" which wil hold terms that editable on the list Edit Screen.  
+- A **List** is a community around one subject. It defines **Details**, which come in two kinds:
+  - **Facts** describe what an Item *is* (Producer, Vintage). Each Item has one shared value per Fact.
+  - **Opinions** are questions every member answers privately (Taste, Price paid).
+- Members (**Contributors**) add **Items**. Each Item is identified by its Facts, and its name is
+  generated from a template (`{Producer} {Vintage}`).
+- Each member gives an Item a **Review** label and answers the Opinions they've chosen for their own view.
+- Everyone sees **aggregates** (the most popular answer). Answers with overwhelming agreement are
+  frozen as a **ConsensusValue**.
+- Individual answers, personal views and personalizations are never visible to anyone else.
 
-User can become COntributor and after automatic approval or manual apporoval by list admin. 
-Contributor can have diferent states. PENDING/REJECTED/BANNED/MEMBER/ADMIN/OWNER. Only MEMBER/ADMIN/OWNER states allows access to the list
+## Roles
 
-Answers to List questions will be saved on Contributor
-
-List have details(Questions) which are visible to any Contributor of this list (Example: Wine type, year, etc.) 
-Contributor can add new details(Questions) to the list. Contributor can edit or delete them only if they are not used but other Contributors. 
-
-List have SelectedDetail which are details that are used and or customized by the contributor. 
-Contributor can drag details(Questions) to the seclectedDetails list the new  seclectedDetails will be created with link to detail(Question)
-Contributor can cutomize Selected details (position, privacy, label display)
-
-
-Contributor can add Item to the list 
-Contributor can create a Review  by selecting predefined multiple choice (  FAVORITE, GOOD, OK, BAD, WISH_TO_TRY ) on the Item
-There is exactly one Review per contributor per item
-
-Contributor can and answer all questions/details by selecting possible options or setting  discrete values 
-Contributor can personalize option with  (sentiment, disabled, position) fields
-Contributor can personalize Value with  (sentiment that corrspond to a number/text/date) fields
-Sentiment is an int value from 1 to 5 that describe contributors opinion of something. 1 bad 5 good
-
-Detail can be of type singleSelect,  number,  text,  tags,  date, location
-Detail can be marked private and this will be defailt value for SelectedDetail private field. 
-Contributors cannot modify or delete details that were not created by them
-After Detail has a corresponding SelectedDetail it becomes immutable.
-If all SelectedDetails are deleted for a Detail becomes mutable again.
-If there is only one corresponding SelectedDetail and this SelectedDetails is created by Detail creator this creator has edit/delete button enabled but on click system will ask to delete SelectedDetail and on confirmation SelectedDetail is deleted and Detail becomes mutable.
-
-
-Only Detail createor can modify/delete Detail unless it became immutable. 
-Only SelectedDetail creator can delete SelectedDetail
-If only one coresponding SelectedDetail exists and it is from the same contibutor he can delete SelectedDetail and modify Detail.
-If the only selecteddetail that exists for that detail is from the same Contributor as creator of the detail this creator can delete it with a warning message. IN this case Selected detail and all Values Personalizations will be deleted. 
-Contributors cannot modify or delete details that were not created by them.
-
-Detail has a counter of corresponding SelectedDetails persisted and maintained transactionally when selected detail is creasted or deleted
-
-
-Detail can be deleted or modified if it has no corresponding SelectedDetail
-If detail has only one SelectedDetail and both of them are created by the same user this user can delete the detail with the warning of data loss and cascading deletion of related SelectedDetail it's child objects
-Detail has a counter of all corresponding SelectedDetails 
-Admins can mark Details to be default for a List
-Default details will be used to create initial set of SelectedDetails for new Contributors. THey will be authored by current Contributor.  After creation current contributor can delete them and/or select different details. 
-Details with no corresponding SelectedDetails from any contributors will be deleted automatically after upForDeletionDate is reached
-Detail upForDeletionDate is set to one week after last SelectedDetail for that Detail is deleted and after Detail creation. If someone will create SelectedDetail based on that detail timer stops and reset to 0. 
-If Contributor that created detail leaves the List details stay. Detail is owned by the list not the contributor how created it.
-
-
-SelectedDetail holds one or many values depending on Detail configuration
-If a SelectedDetail is deleted, then corresponding Contributor's Values, OptionPersonalizations, and ValuePersonalizations are deleted
-Contributor can Select his own one or many Values for a DelectedDetail that is his personal answer.
-Contributor can change or delete his own Values. 
-Contributor cannot see change or delete other congtrobutors Values. 
-
-
-Contributor cannot see peronalization of other contributors
-Contributor cannot see reviews of other contributors
-Contributor can see aggregate values counts of other contriobutors 
-Detail's aggregates are hidden for Details with 3 or less SelectedDetails for Detail marked private. 
-
-Item holds aggregate values ie cached projection derived from reviews for this item. 
-
-
-
-Value belongs to Review and SelectedDetail
-
-Value types with explanation:
--singleSelect exactly one option,
-- tags zero-to-many options,
-- number exactly one numeric,
-- text exactly one text,
-- date exactly one date,
-- location exactly one location.
-
-ConsensusValue calculation by detail type:
-- singleSelect and tags: counts
-- number: histogram
-- date: most number same date
-- text and location: only if it is the same more than 50% of answers
-
-All objects have created by/who fields and modified by/who and set to contributor
-
-| Model | Purpose |
+| Status | Access |
 |---|---|
-| `User` | Account; only `username`. Membership in lists goes through `Contributor`. Deleted if user deletes his account.|
-| `Contributor` | Join entity between `User` and `List`. It has field status with values: PENDING/REJECTED/BANNED/MEMBER/ADMIN/OWNER. Deleted if user or list is deleted. Deleted if user exit the list and confirms deletion of private data within this list.  When contributor leaves the list all objects created by him in this list are deleted apart from Details that has corresponding SelectedDetails not created by the leaving contributor. All created/updated by fields referencing this Contributor are replaced with "deleted contributor" palceholder.|
-| `List` | A collection with name, contributors, items, and details. Can be Deleted By creator if no other contributors apart from creators exist. |
-| `Item` | A thing being reviewed. Can be deleted by creator if creator is the only one who has associated review. Admin can disable it which will remove Item from the list search. |
-| `Review` | A contributor's review of an item: a `ReviewLabel` plus a set of `Value`s. Can be deleted by creator. |
-| `Detail` | A configurable question/attribute definition (name, type, number range, options). Belongs to a list. Can be deleted by creator if it has one or no associated SelectedDetail and selected detail is from the creator |
-| `SelectedDetail` | Per-contributor customization of a `Detail` (position, privacy, label display). private per contributor. Can be deleted by controbutor. |
-| `Option` | A choice for `singleSelect`/`tags` details. Has a name. Deleted if detail is deleted. Can be deleted by creator if not selected by anyone else. |
-| `Value` | An answer: number/text/date and/or selected options; belongs to a `Review`. Deleted if review is deleted Can be deleted by the creator. Deleted if SelectedDetail is deleted.
-| `ConsensusValue` | An answer: number/text/date and/or selected options; belongs to a `Detail` and an `Item` ( Item + Detail) and holds most popular/average value from all contributors. Deleted if corresponding item or detail is deleted. |
-| `OptionPersonalization` | Per-contributor tweak of an option (sentiment, disabled, position). they only affect that contributor’s personal experience and are invisible to others. Deleted if Option or Contributor is deleted. |
-| `ValuePersonalization` | Per-contributor opinion(sentiment) of a Value. they only affect that contributor’s personal experience and are invisible to others..   Deleted if Value or Contributor is deleted. |
+| `PENDING`, `REJECTED`, `BANNED` | List statistics only |
+| `MEMBER` | Full List |
+| `ADMIN` | Full List + moderation; ranked by `adminSince` (seniority) |
 
+There is no OWNER. The creator is the first ADMIN. An ADMIN can ban or demote only ADMINs junior to
+them. If the last ADMIN leaves, the longest-tenured MEMBER is promoted. A List is deleted when its
+last Contributor leaves. [`MOD-*`, `LEAVE-*`]
 
+## Entities
 
+| Model | Key fields | Belongs to / unique per | Deleted when |
+|---|---|---|---|
+| `User` | `username`, `appTermsAcceptedVersion`, `ageConfirmedAt`, `suspended`, `suspensionReason` | — / `username` | the User deletes the account — immediate and complete [`ACC-3`, `ACC-4`] |
+| `List` | `name`, admission mode, age/terms filters, `terms` + `termsVersion`, `unlisted`, name template | — | its sole Contributor deletes it, or the last Contributor leaves [`LIST-3`, `LEAVE-6`] |
+| `Contributor` | `status`, `joinedAt`, `adminSince`, `ageConfirmed`, `termsAcceptedVersion`, `invitedBy`, `screenConfig` | User + List / (User, List) | leaving; User or List deleted. A ban keeps the record and hides its data, which is purged after 1 year [`MOD-2a`] |
+| `InviteLink` | code | Contributor / one per member | regenerated; member leaves or is banned [`JOIN-1a`] |
+| `Detail` | `kind` (`FACT` \| `OPINION`), `type`, `name`, `min`/`max`/`step`, `private` (Opinion), `required` (Fact), `default` (Opinion), `archived`, `selectedDetailCount`, `upForDeletionDate` | List | Opinion: creator while mutable, or auto-cleanup 7 days after its last SelectedDetail goes [`DET-7..14`]. Fact: never [`FACT-4`] |
+| `Option` | `name`, `position`, `archived` | Detail | with its Detail; freely editable while the Detail is unused, frozen once in use (archive/remap instead) [`DET-6`, `ARC-5`] |
+| `SelectedDetail` | `position`, `private`, label display | Contributor + Opinion / (Contributor, Detail) | owner deletes it — also deletes their Values and personalizations for it [`SEL-4`] |
+| `Item` | generated `name`, `searchText`, one optional photo (+ uploader), `archived` | List / uniqueness key = values of required, non-archived Facts [`UNIQ-1`] | Review count reaches 0 [`ITEM-6`]; creator, if sole reviewer [`ITEM-2`] |
+| `FactValue` | answer per type (incl. Options) | Item + Fact / (Item, Fact) | with its Item; fill/edit rules in [`FVAL-3`] |
+| `Review` | `label`: `FAVORITE` \| `GOOD` \| `OK` \| `BAD` \| `WISH_TO_TRY` | Contributor + Item / (Contributor, Item) | creator; required before answering Opinions, and an Item's creator must review it [`REV-*`] |
+| `Value` | answer per type (incl. Options) | Review + SelectedDetail / (Review, Detail) | its Review or SelectedDetail is deleted |
+| `ConsensusValue` | frozen most-popular answer | Item + Opinion / (Item, Detail) | conditions no longer hold (daily job), or Item/Detail deleted [`AGG-4..7`] |
+| `OptionPersonalization` | `sentiment` 1–5, `disabled`, `position` | Contributor + Option (Fact or Opinion) | Option or Contributor deleted; moved or dropped on remap [`PER-1`, `ARC-5`] |
+| `ValuePersonalization` | `sentiment` 1–5 | Contributor + Value | Value or Contributor deleted; none for FactValues [`PER-2`] |
+| `Report` | reported object, reason, outcome | reporting User | 1 year after resolution, or the reporter deletes their account [`UGC-1`] |
+| `Block` | — | blocker + blocked User / pair | blocker removes it; either User deleted [`UGC-3`] |
 
-These are gaps in the source spec, not resolved here — call them out before building against this doc:
+All objects carry `createdAt`, `createdBy`, `modifiedAt`, `modifiedBy`. On surviving objects, `*By`
+references to a departed Contributor become a "deleted contributor" placeholder. [`AUD-1`, `LEAVE-4`]
 
-Numeric range configuration for number Details (bounds/step) isn't specified.
-Whether Contributors can add new Options to an existing Detail after its creation isn't stated directly (only inferred from Option having its own creator/deletion rule).
-Whether "Item holds aggregate values" (cached projection from reviews) is the same mechanism as ConsensusValue, or a second, distinct aggregate.
-Whether "saved screen configs" on Contributor (mentioned in an earlier draft) is still wanted.
-The exact set of statuses allowed to approve/reject/ban a PENDING Contributor isn't spelled out beyond "list admin" — ADMIN/OWNER is the natural reading but isn't stated as a rule.
+## Detail types
+
+| Type | Value | Aggregate match |
+|---|---|---|
+| `singleSelect` | exactly one Option | same Option |
+| `tags` | zero to many Options | each Option counted separately |
+| `number` | one number, within optional `min`/`max`/`step` | exact number |
+| `text` | one text | case- and whitespace-insensitive |
+| `date` | one date | same date |
+| `location` | `placeId`, display name, lat/long | same `placeId` |
+
+## Privacy and aggregates
+
+- Members see aggregates and answer counts, never anyone else's Reviews, Values, SelectedDetails or
+  personalizations. [`PRIV-1`]
+- Aggregate = the most popular answer, computed live. A tie shows no aggregate. [`AGG-1..3`]
+- **ConsensusValue**: more than 10 answers, with more than 90% choosing the same answer. Re-checked
+  daily. [`AGG-4`, `AGG-5`]
+- **Private** answers never appear in counts. They affect the winning answer only when the
+  (Item, Detail) has more than 5 answers. Banned users' answers don't count. [`PRIV-2`, `PRIV-3`]
+- Items store no aggregates.
+
+## Lifecycle highlights
+
+- **Leaving a List** deletes everything the Contributor created there, except shared content:
+  Opinions others selected, Facts, Options on surviving Details, and Items others reviewed. [`LEAVE-3`]
+- **Archiving** (Items, Facts, Options, Opinions) replaces deletion wherever others depend on the
+  data. Bad Options are fixed by **remapping** them to a correct Option. [§5.5]
+- **Account deletion**, **data export**, **reports**, **blocks**, **suspension** and the **text
+  filter** are covered in spec §12.

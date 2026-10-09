@@ -1,6 +1,7 @@
 # Goods — Product & Data Specification
 
-> Derived from and refining [`datamodel/datamodel_specs.md`](datamodel/datamodel_specs.md).
+> Refined from the original draft; a condensed data-model summary lives in
+> [`datamodel/datamodel_specs.md`](datamodel/datamodel_specs.md). This file is authoritative.
 > Rule IDs (e.g. `DET-3`) are stable references for tickets, tests and code comments. Retired IDs
 > are kept as *removed* entries and never reused.
 > Legal and app-store obligations (account deletion, data rights, user-generated content) are in
